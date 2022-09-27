@@ -1,0 +1,3 @@
+% Fuel storage properties (TJ).
+FUEL,INITIAL_STORAGE,MAX_STORAGE
+gas,0,50000

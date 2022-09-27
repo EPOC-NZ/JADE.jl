@@ -1,0 +1,5 @@
+% Transmission outages,,,,,
+% (reduction in MW capacity),,,,,
+YEAR,WEEK,LOADBLOCK,LINE,REDUCTION
+all,42,peak,NI_TO_HAY,500
+all,42,peak,HAY_TO_NI,500

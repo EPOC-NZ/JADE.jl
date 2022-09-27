@@ -1,0 +1,7 @@
+% Power stations with fixed generation.
+% YEAR and/or WEEK can be "all".
+% Generation in MW
+STATION,NODE,YEAR,WEEK,peak,shoulder,offpeak
+WestWind,HAY,all,all,60,60,60
+Tararua,NI,all,all,37,37,37
+TeApiti,NI,all,all,36,36,36

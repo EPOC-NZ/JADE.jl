@@ -1,0 +1,32 @@
+% Hydro station data
+% Capacity in MW;
+% Specific power in MW/cumec;
+% Spillway max flow in cumecs (can be zero if no spillway exists, or "na" for unlimited spill).
+
+GENERATOR,HEAD_WATER_FROM,TAIL_WATER_TO,POWER_SYSTEM_NODE,CAPACITY,SPECIFIC_POWER,SPILLWAY_MAX_FLOW
+Arapuni,Lake_Arapuni,Lake_Karapiro,NI,196.7,0.439847649,na
+Aratiatia,Lake_Aratiatia,Lake_Ohakuri,NI,78,0.273437947,na
+Atiamuri,Lake_Atiamuri,Lake_Whakamaru,NI,84,0.206469423,na
+Karapiro,Lake_Karapiro,Karapiro_tail,NI,100,0.266255522,na
+Maraetai,Lake_Maraetai,Lake_Waipapa,NI,360,0.505804564,na
+Ohakuri,Lake_Ohakuri,Lake_Atiamuri,NI,112,0.281025016,na
+Waipapa,Lake_Waipapa,Lake_Arapuni,NI,55,0.144558945,na
+Whakamaru,Lake_Whakamaru,Lake_Maraetai,NI,100,0.316127853,na
+Aviemore,Lake_Aviemore,Lake_Waitaki,SI,230.2,0.327542644,5400
+Benmore,Lake_Benmore,Lake_Aviemore,SI,540.4,0.815478023,3400
+Ohau_A,Pukaki_Ohau_canal_junction,Lake_Ruataniwha,SI,264.2,0.50033761,0    % spill is via Ohau River
+Ohau_B,Lake_Ruataniwha,Ohau_BC_canal,SI,212.2,0.401303901,0
+Ohau_C,Ohau_BC_canal,Lake_Benmore,SI,212.2,0.399072626,560
+Tekapo_B,Tekapo_canal_tail,Lake_Pukaki,SI,160.1,1.231459975,0
+Tekapo_A,Lake_Tekapo,Tekapo_canal_head,SI,25.1,0.229877171,0   % spill is via Lake Scott
+Waitaki,Lake_Waitaki,Waitaki_tail,SI,105,0.166810532,5380
+Clyde_220kV,Lake_Dunstan,Clyde_tail,SI,464,0.535351231,4140
+Roxburgh,Lake_Roxburgh,Roxburgh_tail,SI,334,0.404645354,6000
+Manapouri,Lakes_Manapouri_Te_Anau,SEA,SI, 885,1.424114094,na
+Cobb,Lake_Cobb,SEA,SI,32,4.405,na
+Coleridge,Lake_Coleridge,SEA,SI,45,1.009,na
+Mangahao,Mangahao_head,SEA,NI, 42,2.53,na
+Matahina,Lake_Matahina,SEA,NI,72,0.595,na
+Rangipo,Lake_Moawhango,SEA,NI,120,1.96,na    % tailwater to SEA to avoid double-counting of TPD flows
+Tokaanu,Lake_Rotoaira,SEA,NI,240,1.75,na     % tailwater to SEA to avoid double-counting of TPD flows
+Waikaremoana,Lake_Waikaremoana,SEA,NI,140,3.54,na

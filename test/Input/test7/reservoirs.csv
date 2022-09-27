@@ -1,0 +1,8 @@
+% Reservoirs.
+% Initial contents in gigalitres = millions of cu m. (as at 31/12/2016)
+RESERVOIR, INFLOW_REGION, INI_STATE
+Lake_Hawea, SI,332.074
+Lakes_Manapouri_Te_Anau, SI,688.25
+Lake_Pukaki, SI,2099.866
+Lake_Taupo, NI,750.275
+Lake_Tekapo, SI,397.0295

@@ -1,0 +1,29 @@
+% The standard NZ-hydro-system problem:,
+
+Policy name,policy-default
+
+Simulation name,2019-default-historical
+
+Problem start year,2019
+Problem start week,1
+Number of weeks,52
+
+Use saved cuts from,""
+
+Maximum iterations, 100
+
+Sample start year, 1970
+Sample end year, 2008
+
+Inflow correlation length, 0
+
+Fraction of forward passes using Monte Carlo inflow sequences, 1
+
+Custom inflow sequences from, ""
+
+Simulation type,"Historical"
+
+Random seed,97060
+
+LB flow penalty,500
+UB flow penalty,50

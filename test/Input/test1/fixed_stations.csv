@@ -1,0 +1,11 @@
+% Power stations with fixed generation.
+% YEAR and/or WEEK can be "all".
+% Generation in MW
+
+STATION,NODE,YEAR,WEEK,peak,shoulder,offpeak
+Aniwhenua,NI,all,all,15,15,15
+Patea,NI,all,all,14,14,14
+Wheao,NI,all,all,13,13,13
+Highbank,SI,all,all,11,11,11
+Waipori,SI,all,all,22,22,22
+

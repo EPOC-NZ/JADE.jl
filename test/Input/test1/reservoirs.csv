@@ -1,0 +1,10 @@
+% Reservoirs,,
+% Capacity and initial contents in M cubic metres.,,
+RESERVOIR, INFLOW_REGION, INI_STATE
+Lake_Benmore, SI,322.00032233399
+Lake_Hawea, SI,443.270251628365
+Lakes_Manapouri_Te_Anau, SI,0.0
+Lake_Ohau, SI,0.0
+Lake_Pukaki, SI,1075.46128933324
+Lake_Taupo, NI,160.181268854618
+Lake_Tekapo, SI,348.195046480437

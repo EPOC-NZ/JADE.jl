@@ -1,0 +1,16 @@
+% Thermal station data,,,,,,,,
+% Heat rate in GJ/MWh, capacity in MW.,,,,,,,
+GENERATOR,NODE,FUEL,HEAT_RATE,CAPACITY,OMCOST,START_YEAR,START_WEEK,END_YEAR,END_WEEK
+Stratford_220KV,NI,gas,7.3,387,0,0,0,0,0
+Huntly_e3p,NI,gas,6.8,430,0,2007,23,0,0
+Huntly_main_g1,NI,coal,10.5,260,0,0,0,0,0
+Huntly_main_g2,NI,coal,10.5,260,0,0,0,0,0
+Huntly_main_g3,NI,coal,10.5,260,0,0,0,0,0
+Huntly_main_g4,NI,coal,10.5,265,0,0,0,0,0
+Huntly_peaker,NI,gas,9.5,50,0,2004,23,0,0
+NewPlymouth_110KV_g1,NI,gas,11,120,0,0,0,2007,38
+NewPlymouth_110KV_g2,NI,gas,11,120,0,0,0,2007,38
+NewPlymouth_220KV_g3,NI,gas,11,120,0,0,0,2008,52
+Otahuhu_B,NI,gas,7.05,396,0,0,0,0,0
+NI_Whirinaki_220KV,NI,diesel,11,159,0,2004,22,0,0
+Stratford_peakers,NI,gas,9.5, 200,0,2012,1,0,0

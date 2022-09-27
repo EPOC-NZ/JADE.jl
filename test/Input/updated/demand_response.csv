@@ -1,0 +1,11 @@
+% Demand-response and load-shedding
+% NODE YEAR WEEK and/or LOADBLOCK can be set to ALL
+SECTOR,TRANCHE,NODE,YEAR,WEEK,LOADBLOCK,MODE,TYPE,BOUND,PRICE
+industrial,low,all;!SI,all,all,all,power,proportional,0.025,530
+industrial,medium,all;!SI,all,all,all,power,proportional,0.025,740
+industrial,high,all;!SI,all,all,all,power,proportional,0.05,3180
+commercial,medium,all,all,all,all,power,proportional,0.15,5290
+commercial,high,all,all,all,all,power,proportional,0.15,10580
+residential,high,all,all,all,all,power,proportional,0.6,10580
+%Tiwai,Tranch1,SI,all,all,all,power,absolute,300,300
+%Tiwai,Tranch2,SI,all,all,all,power,absolute,300,600

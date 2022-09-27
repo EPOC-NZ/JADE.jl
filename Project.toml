@@ -1,0 +1,28 @@
+name = "JADE"
+uuid = "80c6e210-5fd8-4239-8e41-eedc57777eff"
+authors = ["Anthony Downward, Andy Philpott, Lea Kapelevich, Oscar Dowson"]
+version = "1.0.0"
+
+[deps]
+JuMP = "4076af6c-e467-56ae-b986-b466b2749572"
+SDDP = "f4570300-c277-11e8-125c-4912f86ce65d"
+MathOptInterface = "b8f27783-ece8-5eb3-8dc8-9495eed66fee"
+DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
+Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
+
+[compat]
+JuMP = "1"
+SDDP = "≥ 0.4.6"
+julia = "1.6"
+
+[extras]
+CRC32c = "8bf52ea8-c179-5cab-976a-9e18b702a9bc"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+GLPK = "60bf3e95-4087-53dc-ae20-288a0d20c6a6"
+
+[targets]
+test = ["CRC32c", "Test", "GLPK"]

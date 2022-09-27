@@ -1,0 +1,6 @@
+% Fuel supply
+% YEAR and/or WEEK can be set to ALL
+% AMOUNT in TJ; PRICE in $/GJ
+FUEL,YEAR,WEEK,AMOUNT,PRICE
+gas,all,1,15000,6
+gas,all,all,200,30

@@ -1,0 +1,25 @@
+% Canals, rivers, and other means of getting water from one place to another.,,,
+% Excludes power station turbines and spillways; those are covered in the hydro_stations file.,,,,,
+% Min/max flow in cumecs.,,,,,
+% Penalties for violating min/max flow constraints are in $ per 1000 cumecs per hour,,,,,
+,,,,,
+ORIG,DEST,MIN_FLOW,MAX_FLOW,LB_PENALTY,UB_PENALTY
+,,,,,
+Lake_Wanaka,Lake_Dunstan,0, NA,50,50
+Lake_Hawea,Lake_Dunstan,0, NA,50,50
+Clyde_tail,Lake_Roxburgh,50,1000,50,50
+Roxburgh_tail,SEA,250,850,50,50
+,,,,,
+Lake_Taupo,Lake_Aratiatia,0, NA,50,50
+Karapiro_tail,SEA,148, NA,50,50
+,,,,,
+Lake_Tekapo,Lake_Scott,0,850,50,50
+Lake_Scott,Tekapo_canal_head,0, NA,50,50
+Lake_Scott,Lake_Benmore,0,850,50,50
+Tekapo_canal_head,Tekapo_canal_tail,0,131,50,50
+Lake_Pukaki,Lake_Benmore,0,3400,50,50
+Lake_Pukaki,Pukaki_Ohau_canal_junction,0,560,50,50
+Lake_Ohau,Pukaki_Ohau_canal_junction,0,200,50,50
+Lake_Ohau,Lake_Ruataniwha,8,560,50,50
+Lake_Ruataniwha,Lake_Benmore,0,1740,50,50
+Waitaki_tail,SEA,150,NA,50,50

@@ -1,0 +1,15 @@
+% Thermal station data,,,,,,,,,
+% Heat rate in GJ/MWh,,,,,,,,,
+% Capacity in MW,,,,,,,,,
+% O&M cost in $/MWh,,,,,,,,,
+GENERATOR,NODE,FUEL,HEAT_RATE,CAPACITY,OMCOST,START_YEAR,START_WEEK,END_YEAR,END_WEEK
+Stratford_220KV,NI,gas,7.6,377,0,0,0,0,0
+Huntly_e3p,NI,gas,7.2,403,0,0,0,0,0
+Huntly_main_g1,NI,coal,10.3,250,0,0,0,0,0
+Huntly_main_g2,NI,coal,10.3,250,0,0,0,0,0
+Huntly_main_g3,NI,coal,10.3,250,0,0,0,0,0
+Huntly_main_g4,NI,coal,10.3,250,0,0,0,0,0
+Huntly_peaker,NI,gas,9.8,51,0,0,0,0,0
+NI_Whirinaki_220KV,NI,diesel,11,155,0,0,0,0,0
+Stratford_peakers,NI,gas,9.5,200,0,0,0,0,0
+McKee,NI,gas,9.4,100,0,0,0,0,0

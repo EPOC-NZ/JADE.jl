@@ -1,0 +1,11 @@
+% Value of stored energy in hydro lakes at the end of the time horizon.
+% STORED_ENERGY is the cumulative stored energy in GWh.
+% VALUE is the marginal value in $/MWh. This column should be a decreasing sequence.
+
+STORED_ENERGY, VALUE
+1000, 137.218398630355   % first 1000 GWh is worth ~ $137/MWh
+1500, 85.9718321526058
+2000, 55.8599294580478
+2500, 33.6899283659697
+3500, 18.9987219142107
+

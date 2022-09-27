@@ -1,0 +1,7 @@
+% Power stations with fixed generation.
+% YEAR WEEK and/or LOADBLOCK can be "all".
+% Generation in MW
+STATION,NODE,YEAR,WEEK,LOCKBLOCK,GENERATION
+WestWind,HAY,all,all,all,60
+Tararua,NI,all,all,all,37
+TeApiti,NI,all,all,all,36

@@ -1,0 +1,33 @@
+% The standard NZ-hydro-system problem:,
+
+Policy name,Test7
+
+Simulation name,Test7
+
+Problem start year,2019
+Problem start week,1
+Number of weeks,52
+
+Use saved cuts from,""
+
+Maximum iterations, 80
+
+Sample start year, 2016
+Sample end year, 2016
+
+Inflow correlation length, 0
+
+%Transmission loss model is ""piecewise linear"" (default) or ""quadratic"".",
+Loss model,"piecewise"
+
+Fraction of forward passes using Monte Carlo inflow sequences,1
+
+Custom inflow sequences from, ""
+
+Simulation type,"historical"
+Simulation sample size,1
+
+Random seed,97060
+
+LB flow penalty,500
+UB flow penalty,50

@@ -1,0 +1,32 @@
+% The standard NZ-hydro-system problem:
+
+Policy name, 2008_steady_state
+
+Simulation name, 2008_steady_state
+
+Problem start year, 2008
+Problem start week, 1
+Number of weeks, 52
+
+Maximum iterations, 100
+Steady state, 0.5
+
+Sample start year, 2008
+Sample end year, 2008
+
+Inflow correlation length, 3
+
+Simulation type, "Monte Carlo"
+Simulation sample size, 0
+
+Random seed, 11111
+
+LB flow penalty, 500
+UB flow penalty, 50
+
+Cut selection frequency, 0
+
+Risk lambda, 1
+Risk beta, 1
+
+Scale reservoirs, 1

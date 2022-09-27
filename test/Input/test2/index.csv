@@ -1,0 +1,18 @@
+% Index to data files for the standard NZ hydro system:
+
+Hours per block,     "Input/test2/hours_per_block.csv"
+Demand,              "Input/test2/demand.csv"
+Lost load,           "Input/test2/lost_load.csv"
+Transmission,        "Input/test2/transmission.csv"
+Transmission outages,"Input/test2/transmission_outages.csv"
+Fixed stations,      "Input/test2/fixed_stations.csv"
+Thermal fuel,        "Input/test2/thermal_fuel_costs.csv"
+Thermal stations,    "Input/test2/thermal_stations.csv"
+Reservoirs,          "Input/test2/reservoirs.csv"
+Reservoir limits,    "Input/test2/reservoir_limits.csv"
+%Hydro junctions,     "Input/test2/hydro_junctions.csv"
+Inflows,             "Input/test2/inflows.csv"
+Hydro stations,      "Input/test2/hydro_stations.csv"
+Hydro arcs,          "Input/test2/hydro_arcs.csv"
+Station outages,     "Input/test2/station_outages.csv"
+Terminal value,      "Input/test2/terminal_water_value.csv"

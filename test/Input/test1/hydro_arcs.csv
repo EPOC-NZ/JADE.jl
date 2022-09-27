@@ -1,0 +1,25 @@
+% Canals, rivers, and other means of getting water from one place to another.
+% Excludes power station turbines and spillways; those are covered in the hydro_stations file.
+% Min/max flow in cumecs.
+
+ORIG,DEST,MIN_FLOW,MAX_FLOW
+
+Lake_Wanaka,Lake_Dunstan, na, na
+Lake_Hawea,Lake_Dunstan, na, na
+Clyde_tail,Lake_Roxburgh,50,1000
+Roxburgh_tail,SEA,250,850
+
+Lake_Taupo,Lake_Aratiatia, na, na
+Karapiro_tail,SEA, 148, na
+
+Lake_Tekapo,Lake_Scott, na, 850
+Lake_Scott,Tekapo_canal_head, na, na
+Lake_Scott,Lake_Benmore, na, 850
+Tekapo_canal_head,Tekapo_canal_tail, na, 131
+Lake_Pukaki,Lake_Benmore, na, 3400
+Lake_Pukaki,Pukaki_Ohau_canal_junction, na, 560
+Lake_Ohau,Pukaki_Ohau_canal_junction, na, 200
+Lake_Ohau,Lake_Ruataniwha,8,560
+Lake_Ruataniwha,Lake_Benmore, na, 1740
+Ohau_BC_canal,Lake_Benmore, na, na
+Waitaki_tail,SEA, 150, na

@@ -1,0 +1,30 @@
+% Load-shedding schedule.,,,,,,
+% Cost in $/MWh.,,,,,,
+NODE,ISLAND,SECTOR,SEGMENT,PROPORTION,BOUND,COST
+NI,NI,industrial,low,0.34,0.05,1000
+NI,nI,industrial,medium,0.34,0.05,1000
+NI,NI,industrial,high,0.34,0.9,1000
+NI,NI,commercial,low,0.27,0.05,1000
+NI,NI,commercial,medium,0.27,0.05,1000
+NI,NI,commercial,high,0.27,0.9,1000
+NI,NI,residential,low,0.39,0.05,1000
+NI,NI,residential,medium,0.39,0.05,1000
+NI,NI,residential,high,0.39,0.9,1000
+HAY,NI,industrial,low,0.34,0.05,1000
+HAY,NI,industrial,medium,0.34,0.05,1000
+HAY,NI,industrial,high,0.34,0.9,1000
+HAY,NI,commercial,low,0.27,0.05,1000
+HAY,NI,commercial,medium,0.27,0.05,1000
+HAY,NI,commercial,high,0.27,0.9,1000
+HAY,NI,residential,low,0.39,0.05,1000
+HAY,NI,residential,medium,0.39,0.05,1000
+HAY,NI,residential,high,0.39,0.9,1000
+SI,SI,industrial,low,0.58,0.05,1000
+SI,SI,industrial,medium,0.58,0.05,1000
+SI,SI,industrial,high,0.58,0.9,1000
+SI,SI,commercial,low,0.15,0.05,1000
+SI,SI,commercial,medium,0.15,0.05,1000
+SI,SI,commercial,high,0.15,0.9,1000
+SI,SI,residential,low,0.27,0.05,1000
+SI,SI,residential,medium,0.27,0.05,1000
+SI,SI,residential,high,0.27,0.9,1000
