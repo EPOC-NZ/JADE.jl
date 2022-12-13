@@ -28,8 +28,8 @@ test1 = joinpath(modeldir, "Input", "test1")
 # end
 # @test crc == 0xa4e90411
 
-using GLPK
-optimizer = optimizer_with_attributes(GLPK.Optimizer, "msg_lev" => 0)
+import HiGHS
+optimizer = optimizer_with_attributes(HiGHS.Optimizer, MOI.Silent() => true)
 
 #--------------------------------------------------------------------------
 @testset "Building model from input files." begin
