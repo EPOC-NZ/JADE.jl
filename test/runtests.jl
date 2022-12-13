@@ -1,3 +1,10 @@
+#  This file is part of JADE source code.
+#  Copyright © 2016-2022 Electric Power Optimization Centre, University of Auckland.
+#
+#  This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+#  If a copy of the MPL was not distributed with this file, You can obtain one at
+#  http://mozilla.org/MPL/2.0/.
+
 using SDDP, Random, JADE, CRC32c, Test
 
 ENV["JADE_DIR"] = joinpath(dirname(@__DIR__), "test")
