@@ -36,11 +36,9 @@ These are internal functions within JADE that should only be used or modified
 by persons who have a deep understanding of the underlying SDDP model.
 
 ## Utility functions
+s
 ```@docs
 JADE.gettimeseries
-JADE.calculatetime
-JADE.cleandata
-JADE.between
 ```
 
 ## Data input functions
@@ -60,7 +58,7 @@ JADE.get_file_directory
 JADE.check_settings_compatibility
 ```
 
-## Data processing functions   
+## Data processing functions
 ```@docs
 JADE.out_neighbors
 JADE.hasdownstream
