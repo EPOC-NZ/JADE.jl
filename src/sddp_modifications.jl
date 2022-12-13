@@ -1,3 +1,10 @@
+#  This file is part of JADE source code.
+#  Copyright © 2016-2022 Electric Power Optimization Centre, University of Auckland.
+#
+#  This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.
+#  If a copy of the MPL was not distributed with this file, You can obtain one at
+#  http://mozilla.org/MPL/2.0/.
+
 """
 	function read_finalcuts_from_file(
 		model::SDDP.PolicyGraph{T},
@@ -18,7 +25,7 @@
 `laststage` the index of the stage of the model that the cuts are being loaded into.
 
 `node_name_parser` SDDP function to convert the `Int` for laststage into the name of the SDDP node.
-	
+
 """
 function read_finalcuts_from_file(
     model::SDDP.PolicyGraph{T},
@@ -268,9 +275,9 @@ WrapHistorical(scenario::Vector{Tuple{T,S}}) where {T,S} = WrapHistorical([scena
 		sampling_scheme::WrapHistorical{T,NoiseTerm};
 		kwargs...,
 	) where {T,NoiseTerm}
-	
+
 A method to sample a scenario using historical data, that returns `true`
-for `terminated_due_to_cycle`. This is used with a custom forward pass: 
+for `terminated_due_to_cycle`. This is used with a custom forward pass:
 `JADEForwardPass`.
 """
 function SDDP.sample_scenario(
@@ -303,7 +310,7 @@ This custom forward pass method for JADE enables historical sequences of inflows
 wrap back, giving new starting states for the next iteration. In order to fit with SDDP.jl,
 if we wish to enable this functionality, there is an additional node given in the historical
 scenario path. This is used to determine `final_node`. We are not using Markov states, so this code
-is a bit more complicated than is currently necessary, but should work if Markov states were 
+is a bit more complicated than is currently necessary, but should work if Markov states were
 to be introduced.
 """
 function SDDP.forward_pass(
