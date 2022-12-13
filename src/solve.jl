@@ -44,13 +44,13 @@ function optimize_policy!(
     check_settings_compatibility(rundata = d.rundata, solveoptions = solveoptions)
 
     if solveoptions.savedcuts != ""
-        cuts_path = joinpath(@JADE_DIR, "Output", solveoptions.savedcuts, "cuts.json")
+        cuts_path = joinpath(@__JADE_DIR__, "Output", solveoptions.savedcuts, "cuts.json")
         if isfile(cuts_path) && solveoptions.warmstart_cuts
             previous_rundata = load_model_parameters(solveoptions.savedcuts)
         end
     else
         cuts_path = joinpath(
-            @JADE_DIR,
+            @__JADE_DIR__,
             "Output",
             d.rundata.data_dir,
             d.rundata.policy_dir,
@@ -73,7 +73,7 @@ function optimize_policy!(
         final_week = mod(d.rundata.start_wk + d.rundata.number_of_wks - 2, 52) + 1
 
         cuts_path = joinpath(
-            @JADE_DIR,
+            @__JADE_DIR__,
             "Input",
             d.rundata.data_dir,
             "EOH",
@@ -88,7 +88,7 @@ function optimize_policy!(
 
         previous_rundata = load_model_parameters(
             joinpath(
-                @JADE_DIR,
+                @__JADE_DIR__,
                 "Input",
                 d.rundata.data_dir,
                 "EOH",
@@ -123,7 +123,7 @@ function optimize_policy!(
                 @info("Existing cuts detected in model; these cuts will be retained")
             end
             cuts_path = joinpath(
-                @JADE_DIR,
+                @__JADE_DIR__,
                 "Output",
                 d.rundata.data_dir,
                 d.rundata.policy_dir,
@@ -158,7 +158,7 @@ function optimize_policy!(
         if solveoptions.fractionMC != 1.0
             sequences = Vector{Vector{Int}}
             seq_path = joinpath(
-                @JADE_DIR,
+                @__JADE_DIR__,
                 "Input",
                 d.rundata.data_dir,
                 solveoptions.custom_inflow_file,

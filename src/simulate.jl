@@ -36,8 +36,13 @@ function simulate(JADEmodel::JADEModel, parameters::JADESimulation)
         joinpath("Input", d.rundata.data_dir)
     )
 
-    cuts_path =
-        joinpath(@JADE_DIR, "Output", d.rundata.data_dir, d.rundata.policy_dir, "cuts.json")
+    cuts_path = joinpath(
+        @__JADE_DIR__,
+        "Output",
+        d.rundata.data_dir,
+        d.rundata.policy_dir,
+        "cuts.json",
+    )
 
     if length(sddpm.nodes[1].bellman_function.global_theta.cuts) == 0
         if isfile(cuts_path)

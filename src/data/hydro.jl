@@ -383,7 +383,7 @@ function diatofile(
     outpath::String,
     policy_dir::String,
 )
-    outpath = joinpath(@JADE_DIR, "Output", outpath)
+    outpath = joinpath(@__JADE_DIR__, "Output", outpath)
     if !ispath(joinpath(outpath, policy_dir))
         mkpath(joinpath(outpath, policy_dir))
     end
