@@ -39,7 +39,6 @@ by persons who have a deep understanding of the underlying SDDP model.
 ```@docs
 JADE.gettimeseries
 JADE.calculatetime
-JADE.cleandata
 JADE.between
 ```
 
@@ -60,7 +59,7 @@ JADE.get_file_directory
 JADE.check_settings_compatibility
 ```
 
-## Data processing functions   
+## Data processing functions
 ```@docs
 JADE.out_neighbors
 JADE.hasdownstream
