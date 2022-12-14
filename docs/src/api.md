@@ -60,7 +60,7 @@ JADE.get_file_directory
 JADE.check_settings_compatibility
 ```
 
-## Data processing functions   
+## Data processing functions
 ```@docs
 JADE.out_neighbors
 JADE.hasdownstream
@@ -86,6 +86,5 @@ JADE.JADEData
 ```@docs
 JADE.read_finalcuts_from_file
 JADE.write_cuts_to_file
-JADE.WrapHistorical
 JADE.InSampleMonteCarlo2
 ```
