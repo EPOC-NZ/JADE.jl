@@ -193,108 +193,17 @@ function write_cuts_to_file(
     return
 end
 
-mutable struct WrapHistorical{T,S} <: SDDP.AbstractSamplingScheme
-    scenarios::Vector{SDDP.Noise{Vector{Tuple{T,S}}}}
-    sequential::Bool
-    counter::Int
+struct _TerminateOnCycle{T<:SDDP.AbstractSamplingScheme} <: SDDP.AbstractSamplingScheme
+    scheme::T
 end
 
-function Base.show(io::IO, h::WrapHistorical)
-    print(
-        io,
-        "A Historical sampler with $(length(h.scenarios)) scenarios sampled ",
-        h.sequential ? "sequentially." : "probabilistically.",
-    )
-    return
-end
-
-"""
-    WrapHistorical(
-        scenarios::Vector{Vector{Tuple{T,S}}},
-        probability::Vector{Float64},
-    ) where {T,S}
-
-A sampling scheme that samples a scenario from the vector of scenarios
-`scenarios` according to `probability`.
-
-### Example
-
-```julia
-WrapHistorical(
-    [
-        [(1, 0.5), (2, 1.0), (3, 0.5)],
-        [(1, 0.5), (2, 0.0), (3, 1.0)],
-        [(1, 1.0), (2, 0.0), (3, 0.0)]
-    ],
-    [0.2, 0.5, 0.3],
-)
-```
-"""
-function WrapHistorical(
-    scenarios::Vector{Vector{Tuple{T,S}}},
-    probability::Vector{Float64},
-) where {T,S}
-    if !(sum(probability) ≈ 1.0)
-        error(
-            "Probability of historical scenarios must sum to 1. Currently: " *
-            "$(sum(probability)).",
-        )
-    end
-    output = [SDDP.Noise(s, p) for (s, p) in zip(scenarios, probability)]
-    return WrapHistorical(output, false, 0)
-end
-
-"""
-    WrapHistorical(scenarios::Vector{Vector{Tuple{T,S}}}) where {T,S}
-
-A deterministic sampling scheme that iterates through the vector of provided
-`scenarios`. The initial states in each iteration (other than the first) are
-set to the ending state of the previous forward pass.
-
-Used in the forward pass of the training to enable custom inflow sequences in steady-state models (see [solve.jl](https://github.com/EPOC-NZ/JADE/blob/master/src/solve.jl)).
-
-## Example
-
-```julia
-WrapHistorical([
-    [(1, 0.5), (2, 1.0), (3, 0.5)],
-    [(1, 0.5), (2, 0.0), (3, 1.0)],
-    [(1, 1.0), (2, 0.0), (3, 0.0)],
-])
-```
-"""
-function WrapHistorical(scenarios::Vector{Vector{Tuple{T,S}}}) where {T,S}
-    return WrapHistorical(SDDP.Noise.(scenarios, NaN), true, 0)
-end
-
-WrapHistorical(scenario::Vector{Tuple{T,S}}) where {T,S} = WrapHistorical([scenario])
-
-"""
-	SDDP.sample_scenario(
-		graph::SDDP.PolicyGraph{T},
-		sampling_scheme::WrapHistorical{T,NoiseTerm};
-		kwargs...,
-	) where {T,NoiseTerm}
-
-A method to sample a scenario using historical data, that returns `true`
-for `terminated_due_to_cycle`. This is used with a custom forward pass:
-`JADEForwardPass`.
-"""
 function SDDP.sample_scenario(
-    graph::SDDP.PolicyGraph{T},
-    sampling_scheme::WrapHistorical{T,NoiseTerm};
-    # Ignore the other kwargs because the user is giving
-    # us the full scenario.
+    graph::SDDP.PolicyGraph,
+    scheme::_TerminateOnCycle;
     kwargs...,
-) where {T,NoiseTerm}
-    if sampling_scheme.sequential
-        sampling_scheme.counter += 1
-        if sampling_scheme.counter > length(sampling_scheme.scenarios)
-            sampling_scheme.counter = 1
-        end
-        return sampling_scheme.scenarios[sampling_scheme.counter].term, true
-    end
-    return SDDP.sample_noise(sampling_scheme.scenarios), true
+) where {T}
+    sample, _ = SDDP.sample_scenario(graph, scheme.scheme; kwargs...)
+    return sample, true
 end
 
 struct JADEForwardPass <: SDDP.AbstractForwardPass end
