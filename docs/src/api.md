@@ -36,7 +36,7 @@ These are internal functions within JADE that should only be used or modified
 by persons who have a deep understanding of the underlying SDDP model.
 
 ## Utility functions
-s
+
 ```@docs
 JADE.gettimeseries
 ```
