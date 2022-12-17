@@ -151,9 +151,9 @@ function simulate(JADEmodel::JADEModel, parameters::JADESimulation)
                 parameters.replications,
                 get_primal,
                 custom_recorders = get_dual,
-                sampling_scheme = InSampleMonteCarlo2(
+                sampling_scheme = SDDP.InSampleMonteCarlo(
                     max_depth = wks,
-                    initial_stage = parameters.initial_stage,
+                    initial_node = parameters.initial_stage,
                     terminate_on_cycle = false,
                     terminate_on_dummy_leaf = false,
                 ),
@@ -187,9 +187,9 @@ function simulate(JADEmodel::JADEModel, parameters::JADESimulation)
                 1,
                 get_primal,
                 custom_recorders = get_dual,
-                sampling_scheme = InSampleMonteCarlo2(
+                sampling_scheme = SDDP.InSampleMonteCarlo(
                     max_depth = wks * parameters.replications,
-                    initial_stage = parameters.initial_stage,
+                    initial_node = parameters.initial_stage,
                     terminate_on_cycle = false,
                     terminate_on_dummy_leaf = false,
                 ),
