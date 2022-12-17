@@ -5,8 +5,6 @@
 #  If a copy of the MPL was not distributed with this file, You can obtain one at
 #  http://mozilla.org/MPL/2.0/.
 
-import Statistics: mean, max
-
 """
 	parsefile(f::Function, file::String, trim::Bool = false)
 

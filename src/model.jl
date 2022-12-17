@@ -84,7 +84,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
         #------------------------------------------------------------------------
         # State variable: water in reservoirs
         #------------------------------------------------------------------------
-        @variable(
+        JuMP.@variable(
             md,
             -sum(
                 d.reservoirs[r].contingent[timenow][j].level / scale_factor for
@@ -103,7 +103,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
         FLOWUNDER = [a for a in s.NATURAL_ARCS if d.natural_arcs[a].minflow != 0.0]
         SPILLOVER = [a for a in s.STATION_ARCS if d.station_arcs[a].maxflow != Inf]
 
-        @variables(
+        JuMP.@variables(
             md,
             begin
                 # Dispatch of energy in MW from hydro stations
@@ -153,7 +153,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
         )
 
         if d.rundata.losses != :none
-            @variables(
+            JuMP.@variables(
                 md,
                 begin
                     # Positive partof transflow
@@ -182,7 +182,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
         # Define handy expressions
         #------------------------------------------------------------------------
 
-        @expressions(
+        JuMP.@expressions(
             md,
             begin
                 # Number of hours in a week
@@ -239,7 +239,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
 
         # Total supply of electricity at any node and block
         if d.rundata.losses != :none
-            @expression(
+            JuMP.@expression(
                 md,
                 supply[n in s.NODES, bl in s.BLOCKS],
                 d.durations[timenow][bl] * (
@@ -249,7 +249,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                 )
             )
         else
-            @expression(
+            JuMP.@expression(
                 md,
                 supply[n in s.NODES, bl in s.BLOCKS],
                 d.durations[timenow][bl] * (
@@ -263,7 +263,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
         #------------------------------------------------------------------------
         # Define constraints
         #------------------------------------------------------------------------
-        @constraints(
+        JuMP.@constraints(
             md,
             begin
                 # Lower and upper bounds on flows
@@ -343,7 +343,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
         )
 
         if length(CONTINGENT) != 0
-            @constraints(
+            JuMP.@constraints(
                 md,
                 begin
                     contingentstorage[r in CONTINGENT],
@@ -365,7 +365,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
         ###################
         #ABP losses code
         if d.rundata.losses != :none
-            @constraints(
+            JuMP.@constraints(
                 md,
                 begin
                     # Define flow tranches for piecewise linear losses.
@@ -417,7 +417,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
             )
 
             # Half line losses are to be added to load at each end of the line
-            @constraints(
+            JuMP.@constraints(
                 md,
                 begin
                     defineNodalLosses[n in s.NODES, bl in s.BLOCKS],
@@ -441,9 +441,9 @@ function JADEsddp(d::JADEData, optimizer = nothing)
         # Flow-conservation-related calculations
         #------------------------------------------------------------------------
         # Get an inflow for every location with inflow data
-        # @variable(md, ω[s.CATCHMENTS_WITH_INFLOW])
+        # JuMP.@variable(md, ω[s.CATCHMENTS_WITH_INFLOW])
         # for c in s.CATCHMENTS_WITH_INFLOW
-        #     @constraint(md, inflow[c] == ω[c])
+        #     JuMP.@constraint(md, inflow[c] == ω[c])
         # end
 
         inflow_uncertainty = Array{Dict{Symbol,Float64},1}()
@@ -465,7 +465,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
             end
         end
 
-        @constraints(
+        JuMP.@constraints(
             md,
             begin
                 # Conservation for reservoirs
@@ -521,11 +521,11 @@ function JADEsddp(d::JADEData, optimizer = nothing)
                 )
 
             if dr.boundtype == :upper
-                @constraint(md, LHS <= RHS)
+                JuMP.@constraint(md, LHS <= RHS)
             elseif dr.boundtype == :lower
-                @constraint(md, LHS >= RHS)
+                JuMP.@constraint(md, LHS >= RHS)
             elseif dr.boundtype == :equality
-                @constraint(md, LHS == RHS)
+                JuMP.@constraint(md, LHS == RHS)
             else
                 error("Invalid bound type: " * string(dr.boundtype))
             end
@@ -534,7 +534,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
         #------------------------------------------------------------------------
         # Objective-related calculations
         #------------------------------------------------------------------------
-        @expression(
+        JuMP.@expression(
             md,
             lostloadcosts,
             sum(
@@ -553,7 +553,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
             )
         )
 
-        @expression(
+        JuMP.@expression(
             md,
             contingent_storage_cost,
             sum(
@@ -563,7 +563,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
             )
         )
 
-        @expression(
+        JuMP.@expression(
             md,
             carbon_emissions[t in s.THERMALS, bl in s.BLOCKS],
             d.carbon_content[d.thermal_stations[t].fuel] *
@@ -572,7 +572,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
             d.durations[timenow][bl]
         )
 
-        @expression(
+        JuMP.@expression(
             md,
             immediate_cost,
             sum(
@@ -593,10 +593,10 @@ function JADEsddp(d::JADEData, optimizer = nothing)
 
         if stage < number_of_wks || !d.rundata.use_terminal_mwvs
             # Stage cost function not including terminal water value
-            @stageobjective(md, immediate_cost / scale_obj)
+            SDDP.@stageobjective(md, immediate_cost / scale_obj)
         else
             # Convert stored water in Mm³ to MWh
-            @expression(
+            JuMP.@expression(
                 md,
                 storedenergy,
                 1E6 *
@@ -605,14 +605,14 @@ function JADEsddp(d::JADEData, optimizer = nothing)
             )
 
             for cut in d.terminal_eqns # -terminalcost for value
-                @constraint(
+                JuMP.@constraint(
                     md,
                     (-terminalcost) <=
                     (cut.intercept + cut.coefficient * storedenergy) / scale_obj
                 )
             end
             # Cost function includes terminal values added
-            @stageobjective(md, immediate_cost / scale_obj + terminalcost)
+            SDDP.@stageobjective(md, immediate_cost / scale_obj + terminalcost)
         end
     end
 
