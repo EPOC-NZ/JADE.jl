@@ -37,8 +37,8 @@ function read_finalcuts_from_file(
     node_name = node_name_parser(T, string(laststage))::T
     node = model[node_name]
     bf = node.bellman_function
-    if has_upper_bound(bf.global_theta.theta)
-        delete_upper_bound(bf.global_theta.theta)
+    if JuMP.has_upper_bound(bf.global_theta.theta)
+        JuMP.delete_upper_bound(bf.global_theta.theta)
     end
     cuts = JSON.parsefile(filename, use_mmap = false)
     for node_cuts in cuts
@@ -95,15 +95,15 @@ function read_finalcuts_from_file(
         # Here is part (ii): adding the constraints that define the risk-set
         # representation of the risk measure.
         for json_cut in node_cuts["risk_set_cuts"]
-            expr = @expression(
+            expr = JuMP.@expression(
                 node.subproblem,
                 bf.global_theta.theta -
                 sum(p * V.theta for (p, V) in zip(json_cut, bf.local_thetas))
             )
             if JuMP.objective_sense(node.subproblem) == MOI.MIN_SENSE
-                @constraint(node.subproblem, expr >= 0)
+                JuMP.@constraint(node.subproblem, expr >= 0)
             else
-                @constraint(node.subproblem, expr <= 0)
+                JuMP.@constraint(node.subproblem, expr <= 0)
             end
         end
     end

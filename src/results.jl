@@ -92,7 +92,7 @@ function write_sim_results(
     #------------------------------------
     # Final objective
     #------------------------------------
-    writedlm(
+    DelimitedFiles.writedlm(
         outdir("TotalCost.csv"),
         [results[i][end][:running_cost] for i in 1:nsims],
         ',',

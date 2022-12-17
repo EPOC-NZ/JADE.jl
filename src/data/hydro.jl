@@ -333,7 +333,8 @@ function adjustinflows(inflow_file::String, rundata::RunData)
         N = length(years)
         # Follow the steps in DOASA paper
         α = [  # mean historical inflow
-            mean(inflow for (tp, inflow) in zip(tps, infl) if tp.week == t) for t in weeks
+            Statistics.mean(inflow for (tp, inflow) in zip(tps, infl) if tp.week == t)
+            for t in weeks
         ]
         W = [] # rolling total inflow starting from week ty
         for ty in 1:length(infl)
@@ -345,13 +346,15 @@ function adjustinflows(inflow_file::String, rundata::RunData)
             end
         end
         m = [  # mean of the rolling inflow
-            mean(W[i] for (i, tp) in enumerate(tps) if tp.week == t) for t in weeks
+            Statistics.mean(W[i] for (i, tp) in enumerate(tps) if tp.week == t) for
+            t in weeks
         ]
         d = [  # mean + the bigger deviation
             max(0.0, α[tp.week] + (W[i] - m[tp.week]) / √ω) for (i, tp) in enumerate(tps)
         ]
         d_mean = [  # mean of adjusted values
-            mean(d[i] for (i, tp) in enumerate(tps) if tp.week == t) for t in weeks
+            Statistics.mean(d[i] for (i, tp) in enumerate(tps) if tp.week == t) for
+            t in weeks
         ]
         k = [  # adjusted inflows
             isnan(d[i] * α[tp.week] / d_mean[tp.week]) ? α[tp.week] :

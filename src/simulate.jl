@@ -5,8 +5,6 @@
 #  If a copy of the MPL was not distributed with this file, You can obtain one at
 #  http://mozilla.org/MPL/2.0/.
 
-using Random
-
 """
 	simulate(JADEmodel::JADEModel, parameters::JADESimulation)
 
@@ -49,10 +47,10 @@ function simulate(JADEmodel::JADEModel, parameters::JADESimulation)
                 load_model_parameters(d.rundata.data_dir, d.rundata.policy_dir)
             check_rundata(d.rundata, previous_rundata, :partial)
             SDDP.read_cuts_from_file(sddpm, cuts_path)
-            if has_upper_bound(
+            if JuMP.has_upper_bound(
                 sddpm.nodes[d.rundata.number_of_wks].bellman_function.global_theta.theta,
             )
-                delete_upper_bound(
+                JuMP.delete_upper_bound(
                     sddpm.nodes[d.rundata.number_of_wks].bellman_function.global_theta.theta,
                 )
             end

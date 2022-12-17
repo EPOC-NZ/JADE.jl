@@ -7,7 +7,12 @@
 
 module JADE
 
-using JuMP, SDDP, Random, DelimitedFiles, JSON
+import DelimitedFiles
+import JSON
+import JuMP
+import Random
+import Statistics
+import SDDP
 
 const SECONDSPERHOUR = 3600
 const WEEKSPERYEAR = 52

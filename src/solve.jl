@@ -106,10 +106,10 @@ function optimize_policy!(
                 @info("Loading cuts from " * cuts_path)
                 check_rundata(d.rundata, previous_rundata, :full)
                 SDDP.read_cuts_from_file(sddpm, cuts_path)
-                if has_upper_bound(
+                if JuMP.has_upper_bound(
                     sddpm.nodes[d.rundata.number_of_wks].bellman_function.global_theta.theta,
                 )
-                    delete_upper_bound(
+                    JuMP.delete_upper_bound(
                         sddpm.nodes[d.rundata.number_of_wks].bellman_function.global_theta.theta,
                     )
                 end
