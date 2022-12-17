@@ -771,11 +771,7 @@ function load_model_parameters(path::String)
     if !ispath(path)
         error("Parameters for JADE model not found: $path.")
     end
-    open(path, "r") do f
-        global data
-        dicttxt = read(f, String)  # file information to string
-        return data = JSON.parse(dicttxt)  # parse and transform data
-    end
+    data = JSON.parsefile(path)
 
     decisionrules = DecisionRule[]
 
@@ -825,12 +821,7 @@ function load_solve_parameters(model::String, policy::String)
     if !ispath(path)
         error("Solve options not found in Output" * joinpath("Output", model, policy))
     end
-    open(path, "r") do f
-        global data
-        dicttxt = read(f, String)  # file information to string
-        return data = JSON.parse(dicttxt)  # parse and transform data
-    end
-    #return data
+    data = JSON.parsefile(path)
     risk = data["riskmeasure"]
     if risk[1] > 0.0 && risk[2] < 1.0
         riskmeasure = SDDP.EAVaR(lambda = (1 - risk[1]), beta = risk[2])
@@ -859,12 +850,7 @@ function load_simulation_parameters(model::String, policy::String, simulation::S
     if !ispath(path)# || !ispath(joinpath(data_dir,rundata.json))
         error("Parameters for simulation not found")
     end
-    open(path, "r") do f
-        global data
-        dicttxt = read(f, String)  # file information to string
-        return data = JSON.parse(dicttxt)  # parse and transform data
-    end
-
+    data = JSON.parsefile(path)
     if haskey(data, "sim_years") &&
        data["sim_years"] != nothing &&
        length(data["sim_years"]) > 0
