@@ -115,20 +115,6 @@ function between(t1::TimePoint, t2::TimePoint, t3::TimePoint)
 end
 
 """
-For a data frame containing columns named WEEK and YEAR, return only the subset
-of data that falls within a relevant time range.
-"""
-function cleandata(data::DataFrame, t1::TimePoint, t2::TimePoint)
-    if !(:WEEK in names(data) && :YEAR in names(data))
-        error("Data should contain columns named WEEK and YEAR.")
-    else
-        relevant =
-            map((x) -> between(t1, t2, x), map(TimePoint, data[:, :YEAR], data[:, :WEEK]))
-        return data[relevant.==true, :]
-    end
-end
-
-"""
 This function returns the year and week, given a stage.
 """
 function calculatetime(stage::Int, starttime::TimePoint)

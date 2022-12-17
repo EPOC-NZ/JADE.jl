@@ -39,7 +39,6 @@ by persons who have a deep understanding of the underlying SDDP model.
 ```@docs
 JADE.gettimeseries
 JADE.calculatetime
-JADE.cleandata
 JADE.between
 ```
 
@@ -86,5 +85,4 @@ JADE.JADEData
 ```@docs
 JADE.read_finalcuts_from_file
 JADE.write_cuts_to_file
-JADE.InSampleMonteCarlo2
 ```
