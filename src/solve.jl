@@ -260,13 +260,13 @@ function optimize_policy!(
                 sddpm,
                 iteration_limit = solveoptions.iterations,
                 cut_deletion_minimum = solveoptions.cutselection,
-                sampling_scheme = _TerminateOnCycle(SDDP.Historical(sample_paths)),
+                sampling_scheme = SDDP.Historical(sample_paths; terminate_on_cycle = true),
                 cycle_discretization_delta = 10.0,
                 dashboard = false,
                 risk_measure = solveoptions.riskmeasure,
                 parallel_scheme = parallel_scheme,
                 print_level = print_level,
-                forward_pass = JADEForwardPass(),
+                forward_pass = SDDP.DefaultForwardPass(; include_last_node = false),
             )
         else
             solveresults = SDDP.train(
@@ -278,7 +278,6 @@ function optimize_policy!(
                 risk_measure = solveoptions.riskmeasure,
                 parallel_scheme = parallel_scheme,
                 print_level = print_level,
-                forward_pass = JADEForwardPass(),
             )
         end
         # Save cuts to a file
