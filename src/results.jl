@@ -35,7 +35,7 @@ function write_sim_results(
     s = d.sets
 
     data_dir = joinpath(
-        @JADE_DIR,
+        @__JADE_DIR__,
         "Output",
         d.rundata.data_dir,
         d.rundata.policy_dir,
@@ -288,7 +288,7 @@ function write_training_results(
     d::JADEData,
     solveoptions::JADESolveOptions,
 )
-    data_dir = joinpath(@JADE_DIR, "Output", d.rundata.data_dir)
+    data_dir = joinpath(@__JADE_DIR__, "Output", d.rundata.data_dir)
 
     !ispath(data_dir) && mkpath(data_dir)
 
@@ -319,14 +319,14 @@ function write_training_results(
         if d.rundata.number_of_wks == 52 && d.rundata.steady_state == true
             @info("Creating EOH cuts in " * joinpath("Input", "d.rundata.data_dir", "EOH"))
 
-            if !ispath(joinpath(@JADE_DIR, "Input", d.rundata.data_dir, "EOH"))
-                mkpath(joinpath(@JADE_DIR, "Input", d.rundata.data_dir, "EOH"))
+            if !ispath(joinpath(@__JADE_DIR__, "Input", d.rundata.data_dir, "EOH"))
+                mkpath(joinpath(@__JADE_DIR__, "Input", d.rundata.data_dir, "EOH"))
             end
 
             JADE.write_cuts_to_file(
                 sddpm,
                 joinpath(
-                    @JADE_DIR,
+                    @__JADE_DIR__,
                     "Input",
                     d.rundata.data_dir,
                     "EOH",
@@ -337,7 +337,7 @@ function write_training_results(
 
             open(
                 joinpath(
-                    @JADE_DIR,
+                    @__JADE_DIR__,
                     "Input",
                     d.rundata.data_dir,
                     "EOH",
@@ -349,7 +349,7 @@ function write_training_results(
             end
             open(
                 joinpath(
-                    @JADE_DIR,
+                    @__JADE_DIR__,
                     "Input",
                     d.rundata.data_dir,
                     "EOH",
@@ -379,7 +379,7 @@ function output_tidy_results(
     variables::Array{Symbol,1},
 )
     data_dir = joinpath(
-        @JADE_DIR,
+        @__JADE_DIR__,
         "Output",
         d.rundata.data_dir,
         d.rundata.policy_dir,

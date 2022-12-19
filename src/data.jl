@@ -633,8 +633,13 @@ function backup_input_files(rundata::RunData)
         "thermal_fuel_supply.csv",
     ]
 
-    out_path =
-        joinpath(@JADE_DIR, "Output", rundata.data_dir, rundata.policy_dir, "data_files")
+    out_path = joinpath(
+        @__JADE_DIR__,
+        "Output",
+        rundata.data_dir,
+        rundata.policy_dir,
+        "data_files",
+    )
 
     if !isdir(out_path)
         mkdir(out_path)

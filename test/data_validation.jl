@@ -29,7 +29,7 @@ function runtests()
 end
 
 function _input_file(s)
-    return joinpath(JADE.@JADE_DIR, "Input", "test1", s)
+    return joinpath(JADE.@__JADE_DIR__, "Input", "test1", s)
 end
 
 function test_data_thermal_stations()

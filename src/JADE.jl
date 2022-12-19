@@ -16,11 +16,16 @@ import SDDP
 const SECONDSPERHOUR = 3600
 const WEEKSPERYEAR = 52
 
-macro JADE_DIR()
-    ex = quote
-        get(ENV, "JADE_DIR", "")::String
-    end
-    return esc(ex)
+"""
+    @__JADE_DIR__
+
+Get the current location of the `ENV["JADE_DIR"]` variable set by the user.
+
+This could have been a function, but we use a macro with double underscores to
+match `@__DIR__` and `@__FILE__`.
+"""
+macro __JADE_DIR__()
+    return esc(:(get(ENV, "JADE_DIR", "")::String))
 end
 
 JSON.lower(t::SDDP.Expectation) = (1.0, 1.0)
