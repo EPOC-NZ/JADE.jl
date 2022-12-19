@@ -7,7 +7,6 @@
 
 module JADE
 
-import DelimitedFiles
 import JSON
 import JuMP
 import Random
