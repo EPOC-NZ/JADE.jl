@@ -92,11 +92,12 @@ function write_sim_results(
     #------------------------------------
     # Final objective
     #------------------------------------
-    DelimitedFiles.writedlm(
-        outdir("TotalCost.csv"),
-        [results[i][end][:running_cost] for i in 1:nsims],
-        ',',
-    )
+    open(outdir("TotalCost.csv"), "w") do io
+        for i in 1:nsims
+            println(io, results[i][end][:running_cost])
+        end
+        return
+    end
 
     #------------------------------------
     # Stored energy
