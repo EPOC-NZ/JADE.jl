@@ -33,46 +33,47 @@ The columns MUST be ordered as shown below.
 
 # Example File
 
-	% Thermal station data,,,,,,,,,
-	% Heat rate in GJ/MWh,,,,,,,,,
-	% Capacity in MW,,,,,,,,,
-	% O&M cost in \$/MWh,,,,,,,,,
-	GENERATOR,NODE,FUEL,HEAT_RATE,CAPACITY,OMCOST,START_YEAR,START_WEEK,END_YEAR,END_WEEK
-	Stratford_220KV,NI,gas,7.6,377,0,0,0,0,0
-	Huntly_e3p,NI,gas,7.2,403,0,2007,23,0,0
-	Huntly_main_g1,NI,coal,10.3,250,0,0,0,0,0
-	Huntly_main_g2,NI,coal,10.3,250,0,0,0,0,0
+```
+% Thermal station data,,,,,,,,,
+% Heat rate in GJ/MWh,,,,,,,,,
+% Capacity in MW,,,,,,,,,
+% O&M cost in \$/MWh,,,,,,,,,
+GENERATOR,NODE,FUEL,HEAT_RATE,CAPACITY,OMCOST,START_YEAR,START_WEEK,END_YEAR,END_WEEK
+Stratford_220KV,NI,gas,7.6,377,0,0,0,0,0
+Huntly_e3p,NI,gas,7.2,403,0,2007,23,0,0
+Huntly_main_g1,NI,coal,10.3,250,0,0,0,0,0
+Huntly_main_g2,NI,coal,10.3,250,0,0,0,0,0
+```
 """
 function getthermalstations(file::String, nodes::Vector{Symbol})
     thermal_stations = Dict{Symbol,ThermalStation}()
-    parsefile(file, true) do items
-        @assert length(items) == 10 # must be 9 columns
-        if lowercase(items[1]) == "generator"
-            return
+    for row in CSV.Rows(
+        file;
+        missingstring = "NA",
+        stripwhitespace = true,
+        comment = "%",
+    )
+        generator, node = str2sym(row.GENERATOR), str2sym(row.NODE)
+        if haskey(thermal_stations, generator)
+            error("Thermal Station ($generator) already given")
+        elseif !(node in nodes)
+            error("Node $node for generator $generator not found")
         end
-        station = str2sym(items[1])
-        if haskey(thermal_stations, station)
-            error("Thermal Station ($station) already given.")
-        end
-        if str2sym(items[2]) in nodes
-            return thermal_stations[station] = ThermalStation(
-                str2sym(items[2]),          # node
-                str2sym(items[3]),          # fuel
-                parse(Float64, items[4]),   # heat rate
-                parse(Float64, items[5]),   # capacity
-                parse(Float64, items[6]),   # O&M cost
-                TimePoint(
-                    parse(Int, items[7]),   # start year
-                    parse(Int, items[8]),   # start week
-                ),
-                TimePoint(
-                    parse(Int, items[9]),   # end year
-                    parse(Int, items[10]),  # end week
-                ),
-            )
-        else
-            error("Node " * items[2] * " for generator " * items[1] * " not found")
-        end
+        thermal_stations[generator] = ThermalStation(
+            node,
+            str2sym(row.FUEL),
+            parse(Float64, row.HEAT_RATE),
+            parse(Float64, row.CAPACITY),
+            parse(Float64, row.OMCOST),
+            TimePoint(
+                parse(Int, row.START_YEAR),
+                parse(Int, row.START_WEEK),
+            ),
+            TimePoint(
+                parse(Int, row.END_YEAR),
+                parse(Int, row.END_WEEK),
+            ),
+        )
     end
     return thermal_stations
 end
@@ -86,12 +87,14 @@ Read costs and carbon content for fuels of thermal plant.
 
 # Example File
 
-    % Fuel costs (\$/GJ except CO2 in \$/tonne) and carbon content (tonnes CO2/GJ)
-    ,,coal,diesel,gas,CO2
-    CO2_CONTENT,,0.0912,0,0.0528,
-    YEAR,WEEK,,,,
-    2008,1,4,33.11,5.57,0
-    2008,2,4,33.11,5.57,0
+```
+% Fuel costs (\$/GJ except CO2 in \$/tonne) and carbon content (tonnes CO2/GJ)
+,,coal,diesel,gas,CO2
+CO2_CONTENT,,0.0912,0,0.0528,
+YEAR,WEEK,,,,
+2008,1,4,33.11,5.57,0
+2008,2,4,33.11,5.57,0
+```
 """
 function getfuelcosts(file::String)
     data = Dict{Symbol,Float64}[]

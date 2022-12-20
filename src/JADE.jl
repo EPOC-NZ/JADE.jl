@@ -7,6 +7,7 @@
 
 module JADE
 
+import CSV
 import JSON
 import JuMP
 import Random

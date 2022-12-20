@@ -46,38 +46,38 @@ The columns MUST be ordered as shown below.
 
 # Example File
 
-    RESERVOIR, INFLOW_REGION, CAPACITY, INI_STATE
-    Lake_Benmore, SI, 423451075.96799916, 322000320.233399
+```
+RESERVOIR, INFLOW_REGION, CAPACITY, INI_STATE
+Lake_Benmore, SI, 423451075.96799916, 322000320.233399
+```
 """
 function initialisereservoirs(file::String, limits::String)
     reservoirs = Dict{Symbol,Reservoir}()
-    parsefile(file) do items
-        @assert length(items) == 3 # must be 3 columns
-        if lowercase(items[1]) == "reservoir"
-            return
-        end
-        reservoir = str2sym(items[1])
+    for row in CSV.Rows(
+        file;
+        missingstring = "NA",
+        stripwhitespace = true,
+        comment = "%",
+    )
+        reservoir = str2sym(row.RESERVOIR)
         if haskey(reservoirs, reservoir)
             error("Reservoir $(reservoir) given twice.")
         end
-        return reservoirs[reservoir] = Reservoir(
-            JADE.TimeSeries{Float64}(JADE.TimePoint(0, 0), []),   # capacity placeholder
-            parse(Float64, items[3]),   # initial state
-            0.0,                         # specific power
-            JADE.TimeSeries{Vector{ContingentTranche}}(JADE.TimePoint(0, 0), []),   # contingent placeholder
+        reservoirs[reservoir] = Reservoir(
+            TimeSeries{Float64}(TimePoint(0, 0), []), # placeholder
+            parse(Float64, row.INI_STATE),
+            0.0,  # specific power
+            TimeSeries{Vector{ContingentTranche}}(TimePoint(0, 0), []),  # contingent placeholder
             length(reservoirs) + 1, # index of reservoir, used to create compatible DOASA cut files
         )
     end
-
     limits, sym = gettimeseries(limits)
-
     for (r, res) in reservoirs
         temp = Float64[]
         for i in 1:length(limits)
             push!(temp, limits[i][Symbol(string(r) * " MAX_LEVEL")])
         end
         res.capacity = TimeSeries{Float64}(limits.startpoint, temp)
-
         temp = Vector{ContingentTranche}[]
         j = 1
         total = zeros(Float64, length(limits))
@@ -100,7 +100,6 @@ function initialisereservoirs(file::String, limits::String)
                                 string(r) * " MIN_" * string(j - 1) * "_LEVEL",
                             )]
                     end
-
                     tranche = ContingentTranche(
                         limit,
                         limits[i][Symbol(string(r) * " MIN_" * string(j) * "_PENALTY")],
@@ -116,7 +115,6 @@ function initialisereservoirs(file::String, limits::String)
         if maximum(total) >= 1E-8
             error("The maximum contingent storage must be constant for each reservoir.")
         end
-
         if length(temp) != 0
             res.contingent = TimeSeries{Vector{ContingentTranche}}(limits.startpoint, temp)
         end
@@ -127,6 +125,7 @@ end
 #------------------------------------------------------
 # Flow arcs and hydro generator data
 #------------------------------------------------------
+
 """
     getnaturalarcs(file::String)
 
@@ -142,41 +141,34 @@ The columns MUST be ordered as shown below.
 
 # Example File
 
-    ORIG,DEST,MIN_FLOW,MAX_FLOW
-    Lake_Wanaka,Lake_Dunstan, NA, NA
-    Lake_Hawea,Lake_Dunstan, 0.00, 99999
+```
+ORIG,DEST,MIN_FLOW,MAX_FLOW[,LB_PENALTY,UB_PENALTY]
+Lake_Wanaka,Lake_Dunstan,NA,NA[,50,50]
+Lake_Hawea,Lake_Dunstan,0.00,99999[,50,50]
+```
 """
 function getnaturalarcs(file::String)
     natural_arcs = Dict{NTuple{2,Symbol},NaturalArc}()
-    parsefile(file, true) do items
-        if length(items) ∉ [4, 6]
-            error(
-                "hydro_arcs.csv should have 4 or 6 columns, " *
-                string(length(items)) *
-                " found",
-            )
-        end
-        if lowercase(items[1]) == "orig"
-            return
-        end
-        od_pair = (str2sym(items[1]), str2sym(items[2]))
+    for row in CSV.Rows(
+        file;
+        missingstring = ["NA", "na", "default"],
+        stripwhitespace = true,
+        comment = "%",
+    )
+        od_pair = (str2sym(row.ORIG), str2sym(row.DEST))
         if haskey(natural_arcs, od_pair)
             error("Arc $(od_pair) given twice.")
-        else
-            natural_arcs[od_pair] = NaturalArc(
-                (lowercase(items[3]) == "na") ? 0.0 : parse(Float64, items[3]),
-                (lowercase(items[4]) == "na") ? Inf : parse(Float64, items[4]),
-                (length(items) == 4 || lowercase(items[5]) == "default") ? -1.0 :
-                parse(Float64, items[5]),
-                (length(items) == 4 || lowercase(items[6]) == "default") ? -1.0 :
-                parse(Float64, items[6]),
-            )
         end
+        natural_arcs[od_pair] = NaturalArc(
+            parse(Float64, coalesce(row.MIN_FLOW, "0")),
+            parse(Float64, coalesce(row.MAX_FLOW, "Inf")),
+            parse(Float64, coalesce(get(row, :LB_PENALTY, missing), "-1")),
+            parse(Float64, coalesce(get(row, :UB_PENALTY, missing), "-1")),
+        )
     end
     return natural_arcs
 end
 
-# Hydro generators
 struct HydroStation
     node::Symbol
     capacity::Float64
@@ -197,9 +189,10 @@ Spillway max flow in cumecs (can be zero if no spillway exists, or "na" for unli
 The columns MUST be ordered as shown below.
 
 # Example File
-
-    GENERATOR,HEAD_WATER_FROM,TAIL_WATER_TO,POWER_SYSTEM_NODE,CAPACITY,SPECIFIC_POWER,SPILLWAY_MAX_FLOW
-    Arapuni,Lake_Arapuni,Lake_Karapiro,NI,196.7,0.439847649,99999
+```julia
+GENERATOR,HEAD_WATER_FROM,TAIL_WATER_TO,POWER_SYSTEM_NODE,CAPACITY,SPECIFIC_POWER,SPILLWAY_MAX_FLOW
+Arapuni,Lake_Arapuni,Lake_Karapiro,NI,196.7,0.439847649,99999
+```
 """
 function gethydros(file::String, nodes::Vector{Symbol})
     hydros = Dict{Symbol,HydroStation}()

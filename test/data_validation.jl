@@ -33,12 +33,16 @@ function _input_file(s)
 end
 
 function test_data_thermal_stations()
-    stations =
-        JADE.getthermalstations(_input_file("thermal_stations.csv"), [:NI, :HAY, :SI])
+    filename = _input_file("thermal_stations.csv")
+    stations = JADE.getthermalstations(filename, [:NI, :HAY, :SI])
     @test length(stations) == 13
     stratford = stations[:STRATFORD_PEAKERS]
     @test stratford.fuel == :GAS
     @test stratford.heatrate == 9.5
+    @test_throws(
+        ErrorException("Node NI for generator STRATFORD_220KV not found"),
+        JADE.getthermalstations(filename, [:SI]),
+    )
     return
 end
 
