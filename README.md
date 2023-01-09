@@ -17,7 +17,7 @@ JADE Github repository are for testing purposes only.
 ## Documentation
 A detailed description of the inputs and outputs to JADE and how to use JADE can be
 found in the JADE [user documentation](https://github.com/EPOC-NZ/JADE/raw/main/docs/JADE%20documentation.pdf),
-and the [API documentation](https://EPOC-NZ.github.io/JADE).
+and the [API documentation](https://EPOC-NZ.github.io/JADE.jl).
 
 ## Copyright
 JADE has been developed by the Electric Power Optimization Centre at the University
@@ -31,4 +31,4 @@ of Auckland. JADE is licensed under the
 [codecov-url]: https://codecov.io/github/EPOC-NZ/JADE?branch=main
 
 [docs-latest-img]: https://img.shields.io/badge/docs-latest-blue.svg
-[docs-latest-url]: https://EPOC-NZ.github.io/JADE
+[docs-latest-url]: https://EPOC-NZ.github.io/JADE.jl
