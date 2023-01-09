@@ -5,8 +5,6 @@
 #  If a copy of the MPL was not distributed with this file, You can obtain one at
 #  http://mozilla.org/MPL/2.0/.
 
-using Random
-
 """
 	simulate(JADEmodel::JADEModel, parameters::JADESimulation)
 
@@ -36,8 +34,13 @@ function simulate(JADEmodel::JADEModel, parameters::JADESimulation)
         joinpath("Input", d.rundata.data_dir)
     )
 
-    cuts_path =
-        joinpath(@JADE_DIR, "Output", d.rundata.data_dir, d.rundata.policy_dir, "cuts.json")
+    cuts_path = joinpath(
+        @__JADE_DIR__,
+        "Output",
+        d.rundata.data_dir,
+        d.rundata.policy_dir,
+        "cuts.json",
+    )
 
     if length(sddpm.nodes[1].bellman_function.global_theta.cuts) == 0
         if isfile(cuts_path)
@@ -49,10 +52,10 @@ function simulate(JADEmodel::JADEModel, parameters::JADESimulation)
                 load_model_parameters(d.rundata.data_dir, d.rundata.policy_dir)
             check_rundata(d.rundata, previous_rundata, :partial)
             SDDP.read_cuts_from_file(sddpm, cuts_path)
-            if has_upper_bound(
+            if JuMP.has_upper_bound(
                 sddpm.nodes[d.rundata.number_of_wks].bellman_function.global_theta.theta,
             )
-                delete_upper_bound(
+                JuMP.delete_upper_bound(
                     sddpm.nodes[d.rundata.number_of_wks].bellman_function.global_theta.theta,
                 )
             end
@@ -151,9 +154,9 @@ function simulate(JADEmodel::JADEModel, parameters::JADESimulation)
                 parameters.replications,
                 get_primal,
                 custom_recorders = get_dual,
-                sampling_scheme = InSampleMonteCarlo2(
+                sampling_scheme = SDDP.InSampleMonteCarlo(
                     max_depth = wks,
-                    initial_stage = parameters.initial_stage,
+                    initial_node = parameters.initial_stage,
                     terminate_on_cycle = false,
                     terminate_on_dummy_leaf = false,
                 ),
@@ -187,9 +190,9 @@ function simulate(JADEmodel::JADEModel, parameters::JADESimulation)
                 1,
                 get_primal,
                 custom_recorders = get_dual,
-                sampling_scheme = InSampleMonteCarlo2(
+                sampling_scheme = SDDP.InSampleMonteCarlo(
                     max_depth = wks * parameters.replications,
-                    initial_stage = parameters.initial_stage,
+                    initial_node = parameters.initial_stage,
                     terminate_on_cycle = false,
                     terminate_on_dummy_leaf = false,
                 ),

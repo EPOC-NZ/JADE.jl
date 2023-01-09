@@ -5,12 +5,10 @@
 #  If a copy of the MPL was not distributed with this file, You can obtain one at
 #  http://mozilla.org/MPL/2.0/.
 
-using Random
-
 """
     plot_storage(
         results::Array{Array{Dict{Symbol,Any},1},1},
-        filename::String = randstring(6);
+        filename::String = Random.randstring(6);
         reservoirs::Array{Symbol,1} = collect(keys(results[1][1][:reslevel])),
     )
 
@@ -27,7 +25,7 @@ storage (GWh) as an interactive webpage.
 """
 function plot_storage(
     results::Array{Array{Dict{Symbol,Any},1},1},
-    filename::String = randstring(6);
+    filename::String = Random.randstring(6);
     reservoirs::Any = collect(keys(results[1][1][:reslevel])),
     fuels::Any = collect(keys(results[1][1][:fuel_storage])),
 )
@@ -65,7 +63,7 @@ end
 """
     plot_prices(
         results::Array{Array{Dict{Symbol,Any},1},1},
-        filename::String = randstring(6);
+        filename::String = Random.randstring(6);
         nodes::Array{Symbol,1} = results[1][1][:prices].axes[1],
         blocks::Array{Symbol,1} = results[1][1][:prices].axes[2],
     )
@@ -85,7 +83,7 @@ total storage (GWh) as an interactive webpage.
 """
 function plot_prices(
     results::Array{Array{Dict{Symbol,Any},1},1},
-    filename::String = randstring(6);
+    filename::String = Random.randstring(6);
     nodes::Array{Symbol,1} = results[1][1][:prices].axes[1],
     blocks::Array{Symbol,1} = results[1][1][:prices].axes[2],
 )
@@ -109,7 +107,7 @@ end
 """
     plot_watervalues(
         results::Array{Array{Dict{Symbol,Any},1},1},
-        filename::String = randstring(6);
+        filename::String = Random.randstring(6);
         reservoirs::Array{Symbol,1} = collect(keys(results[1][1][:reslevel])),
     )
 
@@ -126,7 +124,7 @@ storage (GWh) as an interactive webpage.
 """
 function plot_watervalues(
     results::Array{Array{Dict{Symbol,Any},1},1},
-    filename::String = randstring(6);
+    filename::String = Random.randstring(6);
     reservoirs::Any = collect(keys(results[1][1][:reslevel])),
     fuels::Any = collect(keys(results[1][1][:fuel_storage])),
 )

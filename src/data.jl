@@ -5,8 +5,6 @@
 #  If a copy of the MPL was not distributed with this file, You can obtain one at
 #  http://mozilla.org/MPL/2.0/.
 
-import Statistics: mean, max
-
 """
 	parsefile(f::Function, file::String, trim::Bool = false)
 
@@ -635,8 +633,13 @@ function backup_input_files(rundata::RunData)
         "thermal_fuel_supply.csv",
     ]
 
-    out_path =
-        joinpath(@JADE_DIR, "Output", rundata.data_dir, rundata.policy_dir, "data_files")
+    out_path = joinpath(
+        @__JADE_DIR__,
+        "Output",
+        rundata.data_dir,
+        rundata.policy_dir,
+        "data_files",
+    )
 
     if !isdir(out_path)
         mkdir(out_path)
