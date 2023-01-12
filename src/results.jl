@@ -322,7 +322,7 @@ function write_training_results(
             if !ispath(joinpath(@__JADE_DIR__, "Input", d.rundata.data_dir, "EOH"))
                 mkpath(joinpath(@__JADE_DIR__, "Input", d.rundata.data_dir, "EOH"))
             end
-            eoh_filename =  joinpath(
+            eoh_filename = joinpath(
                 @__JADE_DIR__,
                 "Input",
                 d.rundata.data_dir,
