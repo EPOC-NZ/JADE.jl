@@ -104,7 +104,8 @@ function optimize_policy!(
         SDDP.read_cuts_from_file(
             sddpm,
             cuts_path;
-            node_name_parser = (::Type{Int}, node) -> node == "$final_week" ? d.rundata.number_of_wks : nothing,
+            node_name_parser = (::Type{Int}, node) ->
+                node == "$final_week" ? d.rundata.number_of_wks : nothing,
         )
     elseif isfile(cuts_path)
         if solveoptions.warmstart_cuts
