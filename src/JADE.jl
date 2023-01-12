@@ -41,7 +41,6 @@ include("results.jl")             # functions for writing results to file
 include("solve.jl")
 include("simulate.jl")
 include("visualise.jl")
-include("sddp_modifications.jl")
 
 export JADEdata,
     JADEmodel,

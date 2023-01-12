@@ -322,20 +322,17 @@ function write_training_results(
             if !ispath(joinpath(@__JADE_DIR__, "Input", d.rundata.data_dir, "EOH"))
                 mkpath(joinpath(@__JADE_DIR__, "Input", d.rundata.data_dir, "EOH"))
             end
-            eoh_filename = joinpath(
-                @__JADE_DIR__,
-                "Input",
-                d.rundata.data_dir,
-                "EOH",
-                "$(d.rundata.policy_dir).eoh",
+            SDDP.write_cuts_to_file(
+                sddpm,
+                joinpath(
+                    @__JADE_DIR__,
+                    "Input",
+                    d.rundata.data_dir,
+                    "EOH",
+                    "$(d.rundata.policy_dir).eoh",
+                );
+                node_name_parser = t -> String(mod(t + d.rundata.start_wk - 2, 52) + 1),
             )
-            SDDP.write_cuts_to_file(sddpm, eoh_filename)
-            eoh_data = JSON.parsefile(eoh_filename)
-            for node in eoh_data
-                week = parse(Int, node["node"])
-                node["node"] = String(mod(week + d.rundata.start_wk - 2, 52) + 1)
-            end
-            write(eoh_filename, JSON.json(eoh_data))
             open(
                 joinpath(
                     @__JADE_DIR__,
