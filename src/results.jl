@@ -317,7 +317,7 @@ function write_training_results(
 
     if solveoptions.write_eohcuts
         if d.rundata.number_of_wks == 52 && d.rundata.steady_state == true
-            @info("Creating EOH cuts in " * joinpath("Input", "d.rundata.data_dir", "EOH"))
+            @info("Creating EOH cuts in " * joinpath("Input", d.rundata.data_dir, "EOH"))
 
             if !ispath(joinpath(@__JADE_DIR__, "Input", d.rundata.data_dir, "EOH"))
                 mkpath(joinpath(@__JADE_DIR__, "Input", d.rundata.data_dir, "EOH"))
@@ -331,7 +331,7 @@ function write_training_results(
                     "EOH",
                     "$(d.rundata.policy_dir).eoh",
                 );
-                node_name_parser = t -> String(mod(t + d.rundata.start_wk - 2, 52) + 1),
+                node_name_parser = t -> "$(mod(t + d.rundata.start_wk - 2, 52) + 1)",
             )
             open(
                 joinpath(

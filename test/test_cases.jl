@@ -235,6 +235,31 @@ function test_case_7()
     return
 end
 
+function test_case_1_infinite_horizon_then_finite_horizon()
+    data = define_JADE_model("test1", run_file = "run4")
+    data.scale_objective = 1e6
+    data.weekly_discounting = false
+    options = define_JADE_solve_options("test1"; run_file = "run4")
+    options.write_eohcuts = true
+    model = create_JADE_model(data, HiGHS.Optimizer);
+    optimize_policy!(model, options; print_level = 0);
+    @test model.sddpm.most_recent_training_results.status == :iteration_limit
+    lb = model.sddpm.most_recent_training_results.log[end].bound * data.scale_objective
+    println("JADE LB =     ", lb)
+    @test lb ≈ 1.26e9 atol = 10_000_000
+    # Now build a finite horizon policy using the EOH cuts
+    data.steady_state = false
+    options.write_eohcuts = false
+    options.reset_starting_levels = true
+    data.number_of_wks = 10
+    options.eoh_cutfile = "2008_steady_state"
+    model_finite = create_JADE_model(data, HiGHS.Optimizer);
+    optimize_policy!(model_finite, options)
+    @test length(model_finite.sddpm.nodes) == 10
+    @test model_finite.sddpm.most_recent_training_results.status == :iteration_limit
+    return
+end
+
 end  # module
 
 TestCases.runtests()
