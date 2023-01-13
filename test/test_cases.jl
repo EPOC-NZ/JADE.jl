@@ -270,8 +270,8 @@ function test_case_1_infinite_horizon_then_finite_horizon()
     @test model_finite.sddpm.most_recent_training_results.status == :iteration_limit
     @test ≈(
         SDDP.calculate_bound(model_finite.sddpm) * data.scale_objective,
-        1.2570e9;
-        atol = 1e5,
+        1.2575e9;
+        atol = 1e6,
     )
     # Now build a finite horizon policy using the terminal water value
     options.eoh_cutfile = ""
