@@ -1,3 +1,4 @@
 Manifest.toml
 test/Output
 test/SDDP.log
+test/input/test1/EOH

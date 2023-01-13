@@ -97,8 +97,16 @@ function optimize_policy!(
         )
 
         check_rundata(d.rundata, previous_rundata, :eoh)
-
-        JADE.read_finalcuts_from_file(sddpm, cuts_path, final_week, d.rundata.number_of_wks)
+        bf = sddpm[final_week].bellman_function
+        if JuMP.has_upper_bound(bf.global_theta.theta)
+            JuMP.delete_upper_bound(bf.global_theta.theta)
+        end
+        SDDP.read_cuts_from_file(
+            sddpm,
+            cuts_path;
+            node_name_parser = (::Type{Int}, node) ->
+                node == "$final_week" ? d.rundata.number_of_wks : nothing,
+        )
     elseif isfile(cuts_path)
         if solveoptions.warmstart_cuts
             if length(sddpm.nodes[1].bellman_function.global_theta.cuts) == 0 ||

@@ -79,9 +79,3 @@ JADE.JADESolveOptions
 JADE.JADESimulation
 JADE.JADEData
 ```
-
-## Modified SDDP.jl functionality
-```@docs
-JADE.read_finalcuts_from_file
-JADE.write_cuts_to_file
-```

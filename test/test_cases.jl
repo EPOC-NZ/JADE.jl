@@ -11,8 +11,10 @@ using Test
 using JADE
 
 import HiGHS
+import JuMP
+import SDDP
 
-const MOI = HiGHS.MOI
+const MOI = JuMP.MOI
 
 function runtests()
     jade_dir = get(ENV, "JADE_DIR", nothing)
@@ -232,6 +234,67 @@ function test_case_7()
     DOASA_LB = 254_678_146.808_14
     println("DOASA LB = ", DOASA_LB)
     @test ≈(lb, DOASA_LB; atol = 0.001)
+    return
+end
+
+function test_case_1_infinite_horizon_then_finite_horizon()
+    data = define_JADE_model("test1"; run_file = "run4")
+    data.scale_objective = 1e6
+    data.weekly_discounting = false
+    options = define_JADE_solve_options("test1"; run_file = "run4")
+    options.write_eohcuts = true
+    model = create_JADE_model(data, HiGHS.Optimizer)
+    optimize_policy!(model, options; print_level = 0)
+    @test model.sddpm.most_recent_training_results.status == :iteration_limit
+    lb = model.sddpm.most_recent_training_results.log[end].bound * data.scale_objective
+    println("JADE LB =     ", lb)
+    @test lb ≈ 1.26e9 atol = 10_000_000
+    # Now build a finite horizon policy using the EOH cuts
+    data.steady_state = false
+    options.write_eohcuts = false
+    options.reset_starting_levels = true
+    data.number_of_wks = 10
+    options.eoh_cutfile = "2008_steady_state"
+    model_finite = create_JADE_model(data, HiGHS.Optimizer)
+    num_cons_pre = JuMP.num_constraints(
+        model_finite.sddpm[10].subproblem;
+        count_variable_in_set_constraints = false,
+    )
+    optimize_policy!(model_finite, options; print_level = 0)
+    @test length(model_finite.sddpm.nodes) == 10
+    num_cons_post = JuMP.num_constraints(
+        model_finite.sddpm[10].subproblem;
+        count_variable_in_set_constraints = false,
+    )
+    @test num_cons_post > num_cons_pre
+    @test model_finite.sddpm.most_recent_training_results.status == :iteration_limit
+    @test ≈(
+        SDDP.calculate_bound(model_finite.sddpm) * data.scale_objective,
+        1.2575e9;
+        atol = 1e6,
+    )
+    # Now build a finite horizon policy using the terminal water value
+    options.eoh_cutfile = ""
+    data.use_terminal_mwvs = true
+    model_finite_no_eoh = create_JADE_model(data, HiGHS.Optimizer)
+    num_cons_pre_no_eoh = JuMP.num_constraints(
+        model_finite_no_eoh.sddpm[10].subproblem;
+        count_variable_in_set_constraints = false,
+    )
+    optimize_policy!(model_finite_no_eoh, options; print_level = 0)
+    @test length(model_finite_no_eoh.sddpm.nodes) == 10
+    num_cons_post_no_eoh = JuMP.num_constraints(
+        model_finite_no_eoh.sddpm[10].subproblem;
+        count_variable_in_set_constraints = false,
+    )
+    @test num_cons_pre < num_cons_pre_no_eoh  # no_eoh larger because of terminal
+    @test num_cons_post > num_cons_post_no_eoh  # eoh larger because of cuts
+    @test model_finite_no_eoh.sddpm.most_recent_training_results.status == :iteration_limit
+    @test ≈(
+        SDDP.calculate_bound(model_finite_no_eoh.sddpm) * data.scale_objective,
+        0.3256e9;
+        atol = 1e5,
+    )
     return
 end
 
