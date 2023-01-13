@@ -11,8 +11,10 @@ using Test
 using JADE
 
 import HiGHS
+import JuMP
+import SDDP
 
-const MOI = HiGHS.MOI
+const MOI = JuMP.MOI
 
 function runtests()
     jade_dir = get(ENV, "JADE_DIR", nothing)
@@ -269,7 +271,7 @@ function test_case_1_infinite_horizon_then_finite_horizon()
     @test ≈(
         SDDP.calculate_bound(model_finite.sddpm) * data.scale_objective,
         1.2570e9;
-        atol = 1e5
+        atol = 1e5,
     )
     # Now build a finite horizon policy using the terminal water value
     options.eoh_cutfile = ""
@@ -291,7 +293,7 @@ function test_case_1_infinite_horizon_then_finite_horizon()
     @test ≈(
         SDDP.calculate_bound(model_finite_no_eoh.sddpm) * data.scale_objective,
         0.3256e9;
-        atol = 1e5
+        atol = 1e5,
     )
     return
 end
