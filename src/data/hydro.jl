@@ -5,10 +5,6 @@
 #  If a copy of the MPL was not distributed with this file, You can obtain one at
 #  http://mozilla.org/MPL/2.0/.
 
-#--------------------------------------------------
-# Prepare reservoir-related data
-#--------------------------------------------------
-# Arcs in water network
 struct NaturalArc
     minflow::Float64    # flow lower bound
     maxflow::Float64    # flow upper bound
@@ -36,48 +32,56 @@ mutable struct Reservoir
 end
 
 """
-    initialisereservoirs(file::String, limits::String)
+    initialisereservoirs(
+        reservoirs_filename::String,
+        reservoir_limits_filename::String,
+    )
 
-# Description
+## Description
 
-Read list of reservoirs from `file`.
-Capacity and initial contents in Mm³.
+Read list of reservoirs from `reservoirs_filename`.
+
+Capacity and initial contents are in units of Mm^3.
+
 The columns MUST be ordered as shown below.
 
-# Example File
+## Example `reservoirs_filename`
 
-    RESERVOIR, INFLOW_REGION, CAPACITY, INI_STATE
-    Lake_Benmore, SI, 423451075.96799916, 322000320.233399
+```raw
+RESERVOIR, INFLOW_REGION, CAPACITY, INI_STATE
+Lake_Benmore, SI, 423451075.96799916, 322000320.233399
+```
 """
-function initialisereservoirs(file::String, limits::String)
+function initialisereservoirs(
+    reservoirs_filename::String,
+    reservoir_limits_filename::String,
+)
     reservoirs = Dict{Symbol,Reservoir}()
-    parsefile(file) do items
-        @assert length(items) == 3 # must be 3 columns
-        if lowercase(items[1]) == "reservoir"
-            return
-        end
-        reservoir = str2sym(items[1])
+    for row in CSV.Rows(
+        reservoirs_filename;
+        missingstring = "NA",
+        stripwhitespace = true,
+        comment = "%",
+    )
+        reservoir = str2sym(row.RESERVOIR)
         if haskey(reservoirs, reservoir)
             error("Reservoir $(reservoir) given twice.")
         end
-        return reservoirs[reservoir] = Reservoir(
-            JADE.TimeSeries{Float64}(JADE.TimePoint(0, 0), []),   # capacity placeholder
-            parse(Float64, items[3]),   # initial state
-            0.0,                         # specific power
-            JADE.TimeSeries{Vector{ContingentTranche}}(JADE.TimePoint(0, 0), []),   # contingent placeholder
+        reservoirs[reservoir] = Reservoir(
+            TimeSeries{Float64}(TimePoint(0, 0), []),  # placeholder
+            parse(Float64, row.INI_STATE),
+            0.0,  # specific power
+            TimeSeries{Vector{ContingentTranche}}(TimePoint(0, 0), []),  # contingent placeholder
             length(reservoirs) + 1, # index of reservoir, used to create compatible DOASA cut files
         )
     end
-
-    limits, sym = gettimeseries(limits)
-
+    limits, sym = gettimeseries(reservoir_limits_filename)
     for (r, res) in reservoirs
         temp = Float64[]
         for i in 1:length(limits)
             push!(temp, limits[i][Symbol(string(r) * " MAX_LEVEL")])
         end
         res.capacity = TimeSeries{Float64}(limits.startpoint, temp)
-
         temp = Vector{ContingentTranche}[]
         j = 1
         total = zeros(Float64, length(limits))
@@ -100,7 +104,6 @@ function initialisereservoirs(file::String, limits::String)
                                 string(r) * " MIN_" * string(j - 1) * "_LEVEL",
                             )]
                     end
-
                     tranche = ContingentTranche(
                         limit,
                         limits[i][Symbol(string(r) * " MIN_" * string(j) * "_PENALTY")],
@@ -116,7 +119,6 @@ function initialisereservoirs(file::String, limits::String)
         if maximum(total) >= 1E-8
             error("The maximum contingent storage must be constant for each reservoir.")
         end
-
         if length(temp) != 0
             res.contingent = TimeSeries{Vector{ContingentTranche}}(limits.startpoint, temp)
         end

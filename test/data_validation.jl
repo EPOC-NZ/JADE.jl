@@ -62,6 +62,17 @@ function test_data_reservoirs()
     return
 end
 
+function test_data_reservoirs_duplicate()
+    @test_throws(
+        ErrorException("Reservoir LAKE_HAWEA given twice."),
+        JADE.initialisereservoirs(
+            joinpath(@__DIR__, "bad_data_files", "reservoirs_duplicate.csv"),
+            _input_file("reservoir_limits.csv"),
+        ),
+    )
+    return
+end
+
 function test_data_transmission_lines()
     lineoutage, arcs = JADE.gettimeseries(_input_file("transmission_outages.csv"))
     lineoutage = JADE.duplicate_data(lineoutage, [:PEAK, :SHOULDER, :OFFPEAK])
