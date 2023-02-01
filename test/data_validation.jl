@@ -30,7 +30,7 @@ end
 
 _input_file(s) = joinpath(JADE.@__JADE_DIR__, "Input", "test1", s)
 
-_validation_file(s)= joinpath(@__DIR__, "data_validation_files", s)
+_validation_file(s) = joinpath(@__DIR__, "data_validation_files", s)
 
 function test_data_thermal_stations()
     stations =
@@ -91,7 +91,9 @@ end
 
 function test_data_reservoirs_fail_nonconstant_min_level()
     @test_throws(
-        ErrorException("The maximum contingent storage is not constant for reservoir LAKE_TEKAPO."),
+        ErrorException(
+            "The maximum contingent storage is not constant for reservoir LAKE_TEKAPO.",
+        ),
         JADE.initialisereservoirs(
             _validation_file("reservoirs_small.csv"),
             _validation_file("reservoir_limits_fail_nonconstant.csv"),
