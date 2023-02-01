@@ -43,13 +43,20 @@ Read list of reservoirs from `reservoirs_filename`.
 
 Capacity and initial contents are in units of Mm^3.
 
-The columns MUST be ordered as shown below.
-
 ## Example `reservoirs_filename`
 
 ```raw
 RESERVOIR, INFLOW_REGION, CAPACITY, INI_STATE
 Lake_Benmore, SI, 423451075.96799916, 322000320.233399
+```
+
+## Example `reserovoir_limits_filename`
+
+The `MIN_(j)_LEVEL` and `MAX_(j)_PENALTY` columns are optional.
+
+```raw
+YEAR,WEEK,Lake_Hawea MAX_LEVEL,Lake_Tekapo MAX_LEVEL,Lake_Tekapo MIN_1_LEVEL,Lake_Tekapo MIN_1_PENALTY,Lake_Tekapo MIN_2_LEVEL,Lake_Tekapo MIN_2_PENALTY
+2010,1,1141.95,514.1,-100,500,-191,5000
 ```
 """
 function initialisereservoirs(
@@ -75,53 +82,38 @@ function initialisereservoirs(
             length(reservoirs) + 1, # index of reservoir, used to create compatible DOASA cut files
         )
     end
-    limits, sym = gettimeseries(reservoir_limits_filename)
+    limits, reservoir_limit_column_names = gettimeseries(reservoir_limits_filename)
     for (r, res) in reservoirs
-        temp = Float64[]
-        for i in 1:length(limits)
-            push!(temp, limits[i][Symbol(string(r) * " MAX_LEVEL")])
-        end
-        res.capacity = TimeSeries{Float64}(limits.startpoint, temp)
-        temp = Vector{ContingentTranche}[]
+        res.capacity = TimeSeries{Float64}(
+            limits.startpoint,
+            Float64[limits[i][Symbol("$r MAX_LEVEL")] for i in 1:length(limits)],
+        )
+        tranches = Vector{ContingentTranche}[ContingentTranche[] for i in 1:length(limits)]
         j = 1
         total = zeros(Float64, length(limits))
-        while Symbol(string(r) * " MIN_" * string(j) * "_LEVEL") ∈ sym || j == 1
-            if j > 1 && Symbol(string(r) * " MIN_" * string(j) * "_PENALTY") ∉ sym
-                error(string(r) * " contingent storage penalty missing")
+        if !(Symbol("$r MIN_$(j)_LEVEL") in reservoir_limit_column_names)
+            for i in 1:length(limits)
+                push!(tranches[i], ContingentTranche(0.0, 0.0))
+            end
+        end
+        while Symbol("$r MIN_$(j)_LEVEL") in reservoir_limit_column_names
+            if !(Symbol("$r MIN_$(j)_PENALTY") in reservoir_limit_column_names)
+                error("$r contingent storage missing MIN_$(j)_PENALTY")
             end
             for i in 1:length(limits)
-                limit = 0.0
-                if Symbol(string(r) * " MIN_" * string(j) * "_LEVEL") ∈ sym
-                    if j == 1
-                        push!(temp, ContingentTranche[])
-                        limit =
-                            -limits[i][Symbol(string(r) * " MIN_" * string(j) * "_LEVEL")]
-                    else
-                        total[i] =
-                            -limits[i][Symbol(string(r) * " MIN_" * string(j) * "_LEVEL")]
-                        limit =
-                            total[i] + limits[i][Symbol(
-                                string(r) * " MIN_" * string(j - 1) * "_LEVEL",
-                            )]
-                    end
-                    tranche = ContingentTranche(
-                        limit,
-                        limits[i][Symbol(string(r) * " MIN_" * string(j) * "_PENALTY")],
-                    )
-                    push!(temp[i], tranche)
-                else
-                    push!(temp, [ContingentTranche(0.0, 0.0)])
+                total[i] = -limits[i][Symbol("$r MIN_$(j)_LEVEL")]
+                if j > 1
+                    total[i] += limits[i][Symbol("$r MIN_$(j-1)_LEVEL")]
                 end
+                penalty = limits[i][Symbol("$r MIN_$(j)_PENALTY")]
+                push!(tranches[i], ContingentTranche(total[i], penalty))
             end
             j += 1
         end
-        total .-= minimum(total)
-        if maximum(total) >= 1E-8
-            error("The maximum contingent storage must be constant for each reservoir.")
+        if maximum(total) - minimum(total) >= 1e-8
+            error("The maximum contingent storage is not constant for reservoir $r.")
         end
-        if length(temp) != 0
-            res.contingent = TimeSeries{Vector{ContingentTranche}}(limits.startpoint, temp)
-        end
+        res.contingent = TimeSeries{Vector{ContingentTranche}}(limits.startpoint, tranches)
     end
     return reservoirs
 end

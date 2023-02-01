@@ -28,9 +28,9 @@ function runtests()
     return
 end
 
-function _input_file(s)
-    return joinpath(JADE.@__JADE_DIR__, "Input", "test1", s)
-end
+_input_file(s) = joinpath(JADE.@__JADE_DIR__, "Input", "test1", s)
+
+_validation_file(s)= joinpath(@__DIR__, "data_validation_files", s)
 
 function test_data_thermal_stations()
     stations =
@@ -53,21 +53,59 @@ end
 
 function test_data_reservoirs()
     reservoirs = JADE.initialisereservoirs(
-        _input_file("reservoirs.csv"),
-        _input_file("reservoir_limits.csv"),
+        _validation_file("reservoirs_small.csv"),
+        _validation_file("reservoir_limits_small.csv"),
     )
-    @test length(reservoirs) == 7
-    benmore = reservoirs[:LAKE_BENMORE]
-    @test benmore.initial == 322.00032233399
+    @test length(reservoirs) == 2
+    hawea = reservoirs[:LAKE_HAWEA]
+    @test hawea.sp == 0.0
+    @test hawea.index == 1
+    @test hawea.initial == 332.074
+    @test hawea.capacity isa JADE.TimeSeries{Float64}
+    @test hawea.capacity.data == fill(1141.95, 52)
+    @test hawea.contingent.data == [[JADE.ContingentTranche(0.0, 0.0)] for _ in 1:52]
+    tekapo = reservoirs[:LAKE_TEKAPO]
+    @test tekapo.initial == 397.0295
+    @test tekapo.sp == 0.0
+    @test tekapo.index == 2
+    @test length(tekapo.capacity) == 52
+    @test extrema(tekapo.capacity.data) == (514.1, 632.4)
+    @test tekapo.contingent isa JADE.TimeSeries{Vector{JADE.ContingentTranche}}
+    @test tekapo.contingent[1] ==
+          [JADE.ContingentTranche(100.0, 500.0), JADE.ContingentTranche(91.0, 5000.0)]
+    @test tekapo.contingent[30] ==
+          [JADE.ContingentTranche(100.0, 0.0), JADE.ContingentTranche(91.0, 0.0)]
     return
 end
 
-function test_data_reservoirs_duplicate()
+function test_data_reservoirs_fail_duplicate()
     @test_throws(
         ErrorException("Reservoir LAKE_HAWEA given twice."),
         JADE.initialisereservoirs(
-            joinpath(@__DIR__, "bad_data_files", "reservoirs_duplicate.csv"),
+            _validation_file("reservoirs_fail_duplicate.csv"),
             _input_file("reservoir_limits.csv"),
+        ),
+    )
+    return
+end
+
+function test_data_reservoirs_fail_nonconstant_min_level()
+    @test_throws(
+        ErrorException("The maximum contingent storage is not constant for reservoir LAKE_TEKAPO."),
+        JADE.initialisereservoirs(
+            _validation_file("reservoirs_small.csv"),
+            _validation_file("reservoir_limits_fail_nonconstant.csv"),
+        ),
+    )
+    return
+end
+
+function test_data_reservoirs_fail_nonconstant_missing_penalty()
+    @test_throws(
+        ErrorException("LAKE_TEKAPO contingent storage missing MIN_2_PENALTY"),
+        JADE.initialisereservoirs(
+            _validation_file("reservoirs_small.csv"),
+            _validation_file("reservoir_limits_fail_missing_penalty.csv"),
         ),
     )
     return
