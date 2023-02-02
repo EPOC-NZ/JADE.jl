@@ -118,54 +118,54 @@ function initialisereservoirs(
     return reservoirs
 end
 
-#------------------------------------------------------
-# Flow arcs and hydro generator data
-#------------------------------------------------------
 """
     getnaturalarcs(file::String)
 
 # Description
 
 Read list of hydro station data from `file`.
+
 Canals, rivers, and other means of getting water from one place to another.
+
 Excludes power station turbines and spillways; those are covered in the hydro_stations file.
-Min/max flow in cumecs.
+
+`MIN_FLOW` and `MAX_FLOW` are in cumecs.
+
 NA in MIN_FLOW converted to 0.0
 NA in MAX_FLOW converted to 99999.0
-The columns MUST be ordered as shown below.
 
 # Example File
 
-    ORIG,DEST,MIN_FLOW,MAX_FLOW
-    Lake_Wanaka,Lake_Dunstan, NA, NA
-    Lake_Hawea,Lake_Dunstan, 0.00, 99999
+```raw
+ORIG,DEST,MIN_FLOW,MAX_FLOW
+Lake_Wanaka,Lake_Dunstan,NA,NA
+Lake_Hawea,Lake_Dunstan,0.00,NA
+```
+
+```raw
+ORIG,DEST,MIN_FLOW,MAX_FLOW,LB_PENALTY,UB_PENALTY
+Lake_Wanaka,Lake_Dunstan,NA,NA,100,100
+Lake_Hawea,Lake_Dunstan,0.00,NA,50,50
+```
 """
-function getnaturalarcs(file::String)
+function getnaturalarcs(filename::String)
     natural_arcs = Dict{NTuple{2,Symbol},NaturalArc}()
-    parsefile(file, true) do items
-        if length(items) ∉ [4, 6]
-            error(
-                "hydro_arcs.csv should have 4 or 6 columns, " *
-                string(length(items)) *
-                " found",
-            )
-        end
-        if lowercase(items[1]) == "orig"
-            return
-        end
-        od_pair = (str2sym(items[1]), str2sym(items[2]))
+    for row in CSV.Rows(
+        filename;
+        missingstring = ["NA", "na", "default"],
+        stripwhitespace = true,
+        comment = "%",
+    )
+        od_pair = (str2sym(row.ORIG), str2sym(row.DEST))
         if haskey(natural_arcs, od_pair)
             error("Arc $(od_pair) given twice.")
-        else
-            natural_arcs[od_pair] = NaturalArc(
-                (lowercase(items[3]) == "na") ? 0.0 : parse(Float64, items[3]),
-                (lowercase(items[4]) == "na") ? Inf : parse(Float64, items[4]),
-                (length(items) == 4 || lowercase(items[5]) == "default") ? -1.0 :
-                parse(Float64, items[5]),
-                (length(items) == 4 || lowercase(items[6]) == "default") ? -1.0 :
-                parse(Float64, items[6]),
-            )
         end
+        natural_arcs[od_pair] = NaturalArc(
+            parse(Float64, coalesce(row.MIN_FLOW, "0")),
+            parse(Float64, coalesce(row.MAX_FLOW, "Inf")),
+            parse(Float64, coalesce(get(row, :LB_PENALTY, missing), "-1")),
+            parse(Float64, coalesce(get(row, :UB_PENALTY, missing), "-1")),
+        )
     end
     return natural_arcs
 end

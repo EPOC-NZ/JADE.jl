@@ -133,10 +133,18 @@ function test_data_transmission_lines()
 end
 
 function test_data_hydro_arcs()
-    arcs = JADE.getnaturalarcs(_input_file("hydro_arcs.csv"))
-    @test length(arcs) == 17
-    @test arcs[(:LAKE_WANAKA, :LAKE_DUNSTAN)].minflow == 0.0
-    @test arcs[(:LAKE_WANAKA, :LAKE_DUNSTAN)].maxflow == Inf
+    arcs = JADE.getnaturalarcs(_validation_file("hydro_arcs_small.csv"))
+    @test length(arcs) == 2
+    @test arcs[(:LAKE_WANAKA, :LAKE_DUNSTAN)] == JADE.NaturalArc(0.0, 100.0, -1.0, -1.0)
+    @test arcs[(:LAKE_HAWEA, :LAKE_DUNSTAN)] == JADE.NaturalArc(10.0, Inf, -1.0, -1.0)
+    return
+end
+
+function test_data_hydro_arcs_penalty()
+    arcs = JADE.getnaturalarcs(_validation_file("hydro_arcs_small_penalty.csv"))
+    @test length(arcs) == 2
+    @test arcs[(:LAKE_WANAKA, :LAKE_DUNSTAN)] == JADE.NaturalArc(0.0, Inf, 100.0, -1.0)
+    @test arcs[(:LAKE_HAWEA, :LAKE_DUNSTAN)] == JADE.NaturalArc(0.0, Inf, 25.0, 50.0)
     return
 end
 
