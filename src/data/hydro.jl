@@ -31,6 +31,36 @@ mutable struct Reservoir
     index::Int
 end
 
+function _strip_trailing_comment(x::AbstractString)
+    index = findfirst('%', x)
+    if index === nothing
+        return x
+    end
+    field = strip(x[1:index-1])
+    if field == "na" || field == "NA" || field == "default"
+        return missing
+    end
+    return field
+end
+
+_strip_trailing_comment(::Missing) = missing
+
+function _validate_and_strip_trailing_comment(row, required, optional = Symbol[])
+    row_names = CSV.getnames(row)
+    @assert length(required) <= length(row_names) <= length(required) + length(optional)
+    for n in required
+        @assert n in row_names
+    end
+    for n in row_names
+        @assert n in required || n in optional
+    end
+    dict = Dict(
+        name => _strip_trailing_comment(getproperty(row, name)) for
+        name in CSV.getnames(row)
+    )
+    return (; dict...)
+end
+
 """
     initialisereservoirs(
         reservoirs_filename::String,
@@ -70,6 +100,12 @@ function initialisereservoirs(
         stripwhitespace = true,
         comment = "%",
     )
+        # TODO(odow): is CAPACITY optional?
+        row = _validate_and_strip_trailing_comment(
+            row,
+            [:RESERVOIR, :INFLOW_REGION, :INI_STATE],
+            [:CAPACITY],
+        )
         reservoir = str2sym(row.RESERVOIR)
         if haskey(reservoirs, reservoir)
             error("Reservoir $(reservoir) given twice.")
@@ -156,6 +192,11 @@ function getnaturalarcs(filename::String)
         stripwhitespace = true,
         comment = "%",
     )
+        row = _validate_and_strip_trailing_comment(
+            row,
+            [:ORIG, :DEST, :MIN_FLOW, :MAX_FLOW],
+            [:LB_PENALTY, :UB_PENALTY],
+        )
         od_pair = (str2sym(row.ORIG), str2sym(row.DEST))
         if haskey(natural_arcs, od_pair)
             error("Arc $(od_pair) given twice.")
@@ -170,7 +211,6 @@ function getnaturalarcs(filename::String)
     return natural_arcs
 end
 
-# Hydro generators
 struct HydroStation
     node::Symbol
     capacity::Float64
@@ -182,83 +222,74 @@ end
 """
     gethydros(file::String)
 
-# Description
+## Description
 
 Read list of hydro station data from `file`.
 Capacity in MW;
 Specific power in MW/cumec;
 Spillway max flow in cumecs (can be zero if no spillway exists, or "na" for unlimited spill).
-The columns MUST be ordered as shown below.
 
-# Example File
+## Example File
 
-    GENERATOR,HEAD_WATER_FROM,TAIL_WATER_TO,POWER_SYSTEM_NODE,CAPACITY,SPECIFIC_POWER,SPILLWAY_MAX_FLOW
-    Arapuni,Lake_Arapuni,Lake_Karapiro,NI,196.7,0.439847649,99999
+```raw
+GENERATOR,HEAD_WATER_FROM,TAIL_WATER_TO,POWER_SYSTEM_NODE,CAPACITY,SPECIFIC_POWER,SPILLWAY_MAX_FLOW
+Arapuni,Lake_Arapuni,Lake_Karapiro,NI,196.7,0.439847649,na
+```
+
+```raw
+GENERATOR,HEAD_WATER_FROM,TAIL_WATER_TO,POWER_SYSTEM_NODE,CAPACITY,SPECIFIC_POWER,SPILLWAY_MAX_FLOW,OM_COST,OVERSPILL_PENALTY
+Arapuni,Lake_Arapuni,Lake_Karapiro,NI,196.7,0.439847649,na,100,100
+```
 """
-function gethydros(file::String, nodes::Vector{Symbol})
+function gethydros(filename::String, nodes::Vector{Symbol})
     hydros = Dict{Symbol,HydroStation}()
     station_arcs = Dict{NTuple{2,Symbol},StationArc}()
 
     mode = -1
-
-    parsefile(file, true) do items
-        if length(items) ∉ [7, 8, 9]
-            error(
-                "hydro_stations.csv should have 7, 8, 9 columns, " *
-                string(length(items)) *
-                " found",
-            )
-        end
-
-        if lowercase(items[1]) == "generator"
-            if length(items) == 7
-                mode = 0
-            elseif length(items) == 8
-                if lowercase(items[8]) == "om_cost"
-                    mode = 1
-                elseif lowercase(items[8]) == "overspill_penalty"
-                    mode = 2
-                end
-            elseif length(items) == 9 &&
-                   lowercase(items[8]) == "om_cost" &&
-                   lowercase(items[9]) == "overspill_penalty"
-                mode = 3
-            end
-            if mode == -1
-                error(
-                    "Invalid column headings, if there are 8 or 9 columns the final two must be labelled 'om_cost' and 'overspill_penalty'",
-                )
-            end
-            return
-        end
-        generator = str2sym(items[1])
+    for row in CSV.Rows(
+        filename;
+        missingstring = ["NA", "na", "default"],
+        stripwhitespace = true,
+        comment = "%",
+    )
+        row = _validate_and_strip_trailing_comment(
+            row,
+            [
+                :GENERATOR,
+                :HEAD_WATER_FROM,
+                :TAIL_WATER_TO,
+                :POWER_SYSTEM_NODE,
+                :CAPACITY,
+                :SPECIFIC_POWER,
+                :SPILLWAY_MAX_FLOW,
+            ],
+            [:OM_COST, :OVERSPILL_PENALTY],
+        )
+        generator = str2sym(row.GENERATOR)
         if haskey(hydros, generator)
             error("Generator $(generator) given twice.")
         end
-        station_arc = (str2sym(items[2]), str2sym(items[3]))
-        if str2sym(items[4]) in nodes
-            hydros[generator] = HydroStation(
-                str2sym(items[4]),
-                parse(Float64, items[5]),
-                parse(Float64, items[6]),
-                (mode == 0 || mode == 2) ? 0.0 : parse(Float64, items[8]),
-                station_arc,
-            )
-        else
-            error("Node " * items[4] * " for generator " * items[1] * " not found")
-        end
-
+        station_arc = (str2sym(row.HEAD_WATER_FROM), str2sym(row.TAIL_WATER_TO))
         if haskey(station_arcs, station_arc)
             error("Station arc $(station_arc) already given.")
-        else
-            spillwayflow =
-                station_arcs[station_arc] = StationArc(
-                    (lowercase(items[7]) == "na") ? Inf : parse(Float64, items[7]),
-                    (mode == 0 || mode == 1) ? -1.0 :
-                    ((mode == 2) ? parse(Float64, items[8]) : parse(Float64, items[9])),
-                    generator,
-                )
         end
+
+        power_system_node = str2sym(row.POWER_SYSTEM_NODE)
+        if !(power_system_node in nodes)
+            error("Node $power_system_node for generator $generator not found")
+        end
+        hydros[generator] = HydroStation(
+            power_system_node,
+            parse(Float64, row.CAPACITY),
+            parse(Float64, row.SPECIFIC_POWER),
+            parse(Float64, get(row, :OM_COST, "0.0")),
+            station_arc,
+        )
+        station_arcs[station_arc] = StationArc(
+            parse(Float64, coalesce(row.SPILLWAY_MAX_FLOW, "Inf")),
+            parse(Float64, get(row, :OVERSPILL_PENALTY, "-1")),
+            generator,
+        )
     end
     return hydros, station_arcs
 end
