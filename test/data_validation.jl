@@ -34,11 +34,35 @@ _validation_file(s) = joinpath(@__DIR__, "data_validation_files", s)
 
 function test_data_thermal_stations()
     stations =
-        JADE.getthermalstations(_input_file("thermal_stations.csv"), [:NI, :HAY, :SI])
-    @test length(stations) == 13
-    stratford = stations[:STRATFORD_PEAKERS]
-    @test stratford.fuel == :GAS
-    @test stratford.heatrate == 9.5
+        JADE.getthermalstations(_validation_file("thermal_stations_small.csv"), [:NI])
+    @test length(stations) == 1
+    @test stations[:STRATFORD_220KV] == JADE.ThermalStation(
+        :NI,
+        :GAS,
+        7.6,
+        377.0,
+        0.0,
+        JADE.TimePoint(2008, 1),
+        JADE.TimePoint(2019, 21),
+    )
+    return
+end
+
+function test_data_thermal_stations_node_error()
+    filename = _validation_file("thermal_stations_small.csv")
+    @test_throws(
+        ErrorException("Node NI for generator STRATFORD_220KV not found"),
+        JADE.getthermalstations(filename, [:SI]),
+    )
+    return
+end
+
+function test_data_thermal_stations_duplicate_error()
+    filename = _validation_file("thermal_stations_small_duplicate.csv")
+    @test_throws(
+        ErrorException("Thermal Station (STRATFORD_220KV) already given."),
+        JADE.getthermalstations(filename, [:NI]),
+    )
     return
 end
 
