@@ -101,45 +101,34 @@ Read costs and carbon content for fuels of thermal plant.
     2008,1,4,33.11,5.57,0
     2008,2,4,33.11,5.57,0
 """
-function getfuelcosts(file::String)
-    data = Dict{Symbol,Float64}[]
-    fuels = Symbol[]
-    CO2 = Float64[]
-    start_time = nothing
-    state = 0
-    parsefile(file, true) do items
-        if lowercase(items[1]) == "" && state == 0
-            # header row
-            state = 1
-            for it in items[3:end]
-                push!(fuels, str2sym(it))
-            end
-        elseif lowercase(items[1]) == "co2_content"
-            # get carbon content for fuels
-            # the final 'fuel cost' column is the carbon price
-            for it in items[3:length(fuels)+1]
-                push!(CO2, parse(Float64, it))
-            end
-        elseif lowercase(items[1]) == "year" && state == 1
-            # year / week header row
-            state = 2
-        elseif state == 2
-            @assert length(items) >= 3
-            # fuel price data
-            if length(data) == 0
-                start_time = TimePoint(parse(Int, items[1]), parse(Int, items[2]))
-            else
-                current_time = TimePoint(parse(Int, items[1]), parse(Int, items[2]))
-                if current_time != start_time + length(data)
-                    error("Weeks in " + file + " must be contiguous")
-                end
-            end
-            d = Dict{Symbol,Float64}()
-            for (i, fuel) in enumerate(fuels)
-                d[fuel] = parse(Float64, items[i+2])
-            end
-            push!(data, d)
+function getfuelcosts(filename::String)
+    start_time, data = nothing, Dict{Symbol,Float64}[]
+    rows = CSV.Rows(
+        filename;
+        missingstring = ["NA", "na", "default"],
+        stripwhitespace = true,
+        comment = "%",
+    )
+    row, row_state = iterate(rows)
+    fuels = Dict(
+        str2sym("$k") => parse(Float64, row[k]) for
+        k in CSV.getnames(row) if !(k in (:Column1, :Column2, :CO2))
+    )
+    # Skip YEAR,WEEK,... row
+    _, row_state = iterate(rows, row_state)
+    while (ret = iterate(rows, row_state)) !== nothing
+        row, row_state = ret
+        time = TimePoint(parse(Int, row.Column1), parse(Int, row.Column2))
+        if isempty(data)
+            start_time = time
+        elseif time != start_time + length(data)
+            error("Weeks in $filename must be contiguous")
         end
+        d = Dict{Symbol,Float64}(
+            str2sym("$k") => parse(Float64, row[k]) for
+            k in CSV.getnames(row) if !(k in (:Column1, :Column2))
+        )
+        push!(data, d)
     end
-    return TimeSeries{Dict{Symbol,Float64}}(start_time, data), Dict(zip(fuels, CO2))
+    return TimeSeries{Dict{Symbol,Float64}}(start_time, data), fuels
 end

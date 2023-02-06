@@ -67,11 +67,23 @@ function test_data_thermal_stations_duplicate_error()
 end
 
 function test_data_thermal_fuel_costs()
-    costs, fuels = JADE.getfuelcosts(_input_file("thermal_fuel_costs.csv"))
+    costs, fuels = JADE.getfuelcosts(_validation_file("thermal_fuel_costs_small.csv"))
     @test length(fuels) == 3
-    @test costs[JADE.TimePoint(2005, 10)][:COAL] == 4.0
-    @test costs[JADE.TimePoint(2009, 52)][:DIESEL] == 24.33024581
-    @test length(costs) == 260
+    @test costs[JADE.TimePoint(2019, 1)][:COAL] == 5.6
+    @test costs[JADE.TimePoint(2019, 2)][:GAS] == 6.61
+    @test costs[JADE.TimePoint(2019, 3)][:DIESEL] == 19.57
+    @test costs[JADE.TimePoint(2019, 3)][:CO2] == 27.0
+    @test fuels == Dict(:COAL => 0.0912, :DIESEL => 0.0, :GAS => 0.0528)
+    @test length(costs) == 3
+    return
+end
+
+function test_data_thermal_fuel_costs_non_contig()
+    filename = _validation_file("thermal_fuel_costs_small_non_contig.csv")
+    @test_throws(
+        ErrorException("Weeks in $filename must be contiguous"),
+        JADE.getfuelcosts(filename),
+    )
     return
 end
 
