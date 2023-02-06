@@ -244,8 +244,6 @@ Arapuni,Lake_Arapuni,Lake_Karapiro,NI,196.7,0.439847649,na,100,100
 function gethydros(filename::String, nodes::Vector{Symbol})
     hydros = Dict{Symbol,HydroStation}()
     station_arcs = Dict{NTuple{2,Symbol},StationArc}()
-
-    mode = -1
     for row in CSV.Rows(
         filename;
         missingstring = ["NA", "na", "default"],

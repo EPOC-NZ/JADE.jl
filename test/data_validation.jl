@@ -158,6 +158,39 @@ function test_data_hydro_stations()
     return
 end
 
+function test_data_hydro_stations_small()
+    stations, station_arcs =
+        JADE.gethydros(_validation_file("hydro_stations_small.csv"), [:NI])
+    @test length(stations) == 1
+    @test length(station_arcs) == 1
+    arc = (:LAKE_ARAPUNI, :LAKE_KARAPIRO)
+    @test station_arcs[arc] == JADE.StationArc(Inf, -1.0, :ARAPUNI)
+    @test stations[:ARAPUNI] == JADE.HydroStation(:NI, 196.7, 0.439847649, 0.0, arc)
+    return
+end
+
+function test_data_hydro_stations_small_om_cost()
+    stations, station_arcs =
+        JADE.gethydros(_validation_file("hydro_stations_small_om_cost.csv"), [:NI])
+    @test length(stations) == 1
+    @test length(station_arcs) == 1
+    arc = (:LAKE_ARAPUNI, :LAKE_KARAPIRO)
+    @test station_arcs[arc] == JADE.StationArc(10, -1.0, :ARAPUNI)
+    @test stations[:ARAPUNI] == JADE.HydroStation(:NI, 196.7, 0.439847649, 101.0, arc)
+    return
+end
+
+function test_data_hydro_stations_small_penalty()
+    stations, station_arcs =
+        JADE.gethydros(_validation_file("hydro_stations_small_penalty.csv"), [:NI])
+    @test length(stations) == 1
+    @test length(station_arcs) == 1
+    arc = (:LAKE_ARAPUNI, :LAKE_KARAPIRO)
+    @test station_arcs[arc] == JADE.StationArc(Inf, 102.0, :ARAPUNI)
+    @test stations[:ARAPUNI] == JADE.HydroStation(:NI, 196.7, 0.439847649, 101.0, arc)
+    return
+end
+
 function test_data_station_outages()
     outages, stations = JADE.gettimeseries(_input_file("station_outages.csv"))
     @test length(outages) == 260
