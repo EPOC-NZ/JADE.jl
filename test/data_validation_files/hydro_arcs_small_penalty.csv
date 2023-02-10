@@ -1,0 +1,3 @@
+ORIG,DEST,MIN_FLOW,MAX_FLOW,LB_PENALTY,UB_PENALTY
+Lake_Wanaka,Lake_Dunstan,NA,NA,100,default
+Lake_Hawea,Lake_Dunstan,0.00,NA,25,50

@@ -653,3 +653,33 @@ function backup_input_files(rundata::RunData)
         end
     end
 end
+
+function _strip_trailing_comment(x::AbstractString)
+    index = findfirst('%', x)
+    if index === nothing
+        return x
+    end
+    field = strip(x[1:index-1])
+    if field == "na" || field == "NA" || field == "default"
+        return missing
+    end
+    return field
+end
+
+_strip_trailing_comment(::Missing) = missing
+
+function _validate_and_strip_trailing_comment(row, required, optional = Symbol[])
+    row_names = CSV.getnames(row)
+    @assert length(required) <= length(row_names) <= length(required) + length(optional)
+    for n in required
+        @assert n in row_names
+    end
+    for n in row_names
+        @assert n in required || n in optional
+    end
+    dict = Dict(
+        name => _strip_trailing_comment(getproperty(row, name)) for
+        name in CSV.getnames(row)
+    )
+    return (; dict...)
+end

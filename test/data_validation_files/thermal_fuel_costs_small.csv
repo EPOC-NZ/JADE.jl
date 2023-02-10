@@ -1,0 +1,7 @@
+% Fuel costs ($/GJ except CO2 in $/tonne) and carbon content (tonnes CO2/GJ),,,,,
+,,coal,diesel,gas,CO2
+CO2_CONTENT,,0.0912,0,0.0528,
+YEAR,WEEK,,,,
+2019,1,5.6,19.59,6.68,25
+2019,2,5.7,19.58,6.61,26
+2019,3,5.8,19.57,6.62,27
