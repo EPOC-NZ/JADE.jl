@@ -300,13 +300,12 @@ end
 
 function test_case_1_simulate_historical()
     optimizer = MOI.OptimizerWithAttributes(HiGHS.Optimizer, MOI.Silent() => true)
-    data = define_JADE_model("test1");
+    data = define_JADE_model("test1")
     data.use_terminal_mwvs = true
-    solve_options = define_JADE_solve_options("test1");
-    model = create_JADE_model(data, optimizer);
-    optimize_policy!(model, solve_options; print_level = 0);
-
-    simulation = define_JADE_simulation("test1");
+    solve_options = define_JADE_solve_options("test1")
+    model = create_JADE_model(data, optimizer)
+    optimize_policy!(model, solve_options; print_level = 0)
+    simulation = define_JADE_simulation("test1")
     simulation.sim_type = :historical
     @test_throws(
         ErrorException("Invalid settings found. See REPL for details."),
@@ -335,7 +334,7 @@ function test_case_1_simulate_historical_cyclic()
     options = define_JADE_solve_options("test1"; run_file = "run4")
     model = create_JADE_model(data, HiGHS.Optimizer)
     optimize_policy!(model, options; print_level = 0)
-    simulation = define_JADE_simulation("test1");
+    simulation = define_JADE_simulation("test1")
     simulation.sim_type = :historical
     simulation.replications = 2
     simulation.sim_years = [2008, 2009]
