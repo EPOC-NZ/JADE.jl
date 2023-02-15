@@ -298,6 +298,58 @@ function test_case_1_infinite_horizon_then_finite_horizon()
     return
 end
 
+function test_case_1_simulate_historical()
+    optimizer = MOI.OptimizerWithAttributes(HiGHS.Optimizer, MOI.Silent() => true)
+    data = define_JADE_model("test1");
+    data.use_terminal_mwvs = true
+    solve_options = define_JADE_solve_options("test1");
+    model = create_JADE_model(data, optimizer);
+    optimize_policy!(model, solve_options; print_level = 0);
+
+    simulation = define_JADE_simulation("test1");
+    simulation.sim_type = :historical
+    @test_throws(
+        ErrorException("Invalid settings found. See REPL for details."),
+        JADE.simulate(model, simulation),
+    )
+    simulation.sim_years = [2008]
+    @test_throws(
+        ErrorException("Invalid settings found. See REPL for details."),
+        JADE.simulate(model, simulation),
+    )
+    simulation.replications = 1
+    results = JADE.simulate(model, simulation)
+    @test length(results) == 1
+    @test length(results[1]) == 20
+    @test sum(results[1][1][:lostload]) ≈ 0.0
+    @test results[1][1][:inflow][:LAKE_AVIEMORE] == 16.2042285714286
+    @test results[1][20][:inflow][:LAKE_AVIEMORE] == 8.64508571428571
+    return
+end
+
+function test_case_1_simulate_historical_cyclic()
+    optimizer = MOI.OptimizerWithAttributes(HiGHS.Optimizer, MOI.Silent() => true)
+    data = define_JADE_model("test1"; run_file = "run4")
+    data.scale_objective = 1e6
+    data.weekly_discounting = false
+    options = define_JADE_solve_options("test1"; run_file = "run4")
+    model = create_JADE_model(data, HiGHS.Optimizer)
+    optimize_policy!(model, options; print_level = 0)
+    simulation = define_JADE_simulation("test1");
+    simulation.sim_type = :historical
+    simulation.replications = 2
+    simulation.sim_years = [2008, 2009]
+    results = JADE.simulate(model, simulation)
+    @test length(results) == 2
+    @test length(results[1]) == 52
+    @test sum(results[1][1][:lostload]) ≈ 0.0
+    @test results[1][1][:inflow][:LAKE_AVIEMORE] ≈ 11.9486285714286
+    @test results[1][20][:inflow][:LAKE_AVIEMORE] ≈ 8.0728
+    @test results[2][1][:inflow][:LAKE_AVIEMORE] ≈ 46.7389142857143
+    @test results[2][20][:inflow][:LAKE_AVIEMORE] ≈ 86.2477714285714
+    return
+end
+
 end  # module
 
 TestCases.runtests()

@@ -1142,6 +1142,7 @@ function check_settings_compatibility(;
         end
 
         if simulation.sim_type == :historical &&
+           simulation.sim_years !== nothing &&
            length(simulation.sim_years) != simulation.replications
             errors *= "\n'replications' in a historical simulation must match the number of 'sim_years'"
         end
