@@ -349,6 +349,27 @@ function test_case_1_simulate_historical_cyclic()
     return
 end
 
+function test_case_1_simulate_monte_carlo_cyclic()
+    optimizer = MOI.OptimizerWithAttributes(HiGHS.Optimizer, MOI.Silent() => true)
+    data = define_JADE_model("test1"; run_file = "run4")
+    data.scale_objective = 1e6
+    data.weekly_discounting = false
+    options = define_JADE_solve_options("test1"; run_file = "run4")
+    model = create_JADE_model(data, HiGHS.Optimizer)
+    optimize_policy!(model, options; print_level = 0)
+    simulation = define_JADE_simulation("test1")
+    simulation.sim_type = :monte_carlo
+    simulation.replications = 5
+    results = JADE.simulate(model, simulation)
+    @test length(results) == 5
+    @test length(results[1]) == 52
+    @test sum(results[1][1][:lostload]) ≈ 0.0
+    # Test that the simulation was cyclic
+    res_level = results[1][52][:reslevel][:LAKE_PUKAKI].out
+    @test res_level == results[2][1][:reslevel][:LAKE_PUKAKI].in
+    return
+end
+
 end  # module
 
 TestCases.runtests()
