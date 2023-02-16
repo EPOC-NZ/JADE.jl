@@ -270,7 +270,7 @@ function simulate(JADEmodel::JADEModel, parameters::JADESimulation)
                     if (t + d.rundata.start_wk - 2) % WEEKSPERYEAR == WEEKSPERYEAR - 1
                         i += 1
                     end
-                    push!(sample_paths[end], (t, s_inflows))
+                    push!(sample_paths[end], ((t - 1) % WEEKSPERYEAR + 1, s_inflows))
                 end
                 count += 1
                 if count == parameters.number_of_cycles
