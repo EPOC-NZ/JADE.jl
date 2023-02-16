@@ -383,7 +383,8 @@ function test_case_1_simulate_historical_initial_state()
     simulation.sim_years = [2008]
     results = JADE.simulate(model, simulation)
     # Test that setting the initial state as the default gives the same answer
-    simulation.initial_state = Dict(String(k) => v for (k, v) in model.sddpm.initial_root_state)
+    simulation.initial_state =
+        Dict(String(k) => v for (k, v) in model.sddpm.initial_root_state)
     results2 = JADE.simulate(model, simulation)
     @test results[1][1][:total_storage] == results2[1][1][:total_storage]
     delete!(simulation.initial_state, "reslevel[LAKE_OHAU]")
