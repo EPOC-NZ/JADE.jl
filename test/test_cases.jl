@@ -370,6 +370,35 @@ function test_case_1_simulate_monte_carlo_cyclic()
     return
 end
 
+function test_case_1_simulate_historical_initial_state()
+    optimizer = MOI.OptimizerWithAttributes(HiGHS.Optimizer, MOI.Silent() => true)
+    data = define_JADE_model("test1")
+    data.use_terminal_mwvs = true
+    solve_options = define_JADE_solve_options("test1")
+    model = create_JADE_model(data, optimizer)
+    optimize_policy!(model, solve_options; print_level = 0)
+    simulation = define_JADE_simulation("test1")
+    simulation.sim_type = :historical
+    simulation.replications = 1
+    simulation.sim_years = [2008]
+    results = JADE.simulate(model, simulation)
+    # Test that setting the initial state as the default gives the same answer
+    simulation.initial_state = Dict(String(k) => v for (k, v) in model.sddpm.initial_root_state)
+    results2 = JADE.simulate(model, simulation)
+    @test results[1][1][:total_storage] == results2[1][1][:total_storage]
+    delete!(simulation.initial_state, "reslevel[LAKE_OHAU]")
+    @test_throws(
+        ErrorException("initial_state dictionary has incorrect number of states"),
+        JADE.simulate(model, simulation),
+    )
+    simulation.initial_state["reslevel[LAKE_FAKE]"] = 0.0
+    @test_throws(
+        ErrorException("Invalid state: reslevel[LAKE_FAKE]"),
+        JADE.simulate(model, simulation),
+    )
+    return
+end
+
 end  # module
 
 TestCases.runtests()

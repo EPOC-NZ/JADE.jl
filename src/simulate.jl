@@ -94,7 +94,7 @@ function simulate(JADEmodel::JADEModel, parameters::JADESimulation)
                 d.rundata.scale_reservoirs,
     )
 
-    initial_state = SDDP._initial_state(JADEmodel.sddpm)
+    initial_state = Dict(String(k) => v for (k, v) in JADEmodel.sddpm.initial_root_state)
     if parameters.initial_state == nothing
         @info("Using default initial reservoir levels")
     else
