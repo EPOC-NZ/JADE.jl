@@ -1,7 +1,7 @@
 name = "JADE"
 uuid = "80c6e210-5fd8-4239-8e41-eedc57777eff"
 authors = ["Anthony Downward, Andy Philpott, Lea Kapelevich, Oscar Dowson"]
-version = "1.0.0"
+version = "1.0.1"
 
 [deps]
 JuMP = "4076af6c-e467-56ae-b986-b466b2749572"
