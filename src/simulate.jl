@@ -141,14 +141,14 @@ function simulate(JADEmodel::JADEModel, parameters::JADESimulation)
     Random.seed!(parameters.random_seed)
     wks = d.rundata.number_of_wks * parameters.number_of_cycles
     lastwk = d.rundata.number_of_wks * parameters.number_of_cycles
-    if d.rundata.discount == 0.0
+    if !d.rundata.steady_state
         wks += 1 - parameters.initial_stage
     else
         lastwk += parameters.initial_stage - 1
     end
 
     if parameters.sim_type == :monte_carlo
-        if d.rundata.discount == 0.0 || parameters.reset_starting_levels == true
+        if !d.rundata.steady_state || parameters.reset_starting_levels == true
             results = SDDP.simulate(
                 sddpm,
                 parameters.replications,
@@ -236,7 +236,7 @@ function simulate(JADEmodel::JADEModel, parameters::JADESimulation)
     elseif parameters.sim_type == :historical
         sequence = nothing
         results = Vector{Dict{Symbol,Any}}[]
-        if d.rundata.discount == 0.0 || parameters.reset_starting_levels == true
+        if !d.rundata.steady_state || parameters.reset_starting_levels == true
             sample_paths = Vector{Tuple{Int,Dict{Symbol,Float64}}}[]
             push!(sample_paths, Tuple{Int,Dict{Symbol,Float64}}[])
             seq = []
@@ -255,7 +255,7 @@ function simulate(JADEmodel::JADEModel, parameters::JADESimulation)
                     years,
                 )
                 i = 1
-                extrawks = d.rundata.discount > 0.0 ? parameters.initial_stage - 1 : 0
+                extrawks = d.rundata.steady_state ? parameters.initial_stage - 1 : 0
                 for t in parameters.initial_stage:(d.rundata.number_of_wks+extrawks)
                     s_inflows = Dict{Symbol,Float64}()
                     for c in d.sets.CATCHMENTS_WITH_INFLOW
@@ -322,10 +322,7 @@ function simulate(JADEmodel::JADEModel, parameters::JADESimulation)
                     if (t + d.rundata.start_wk - 2) % WEEKSPERYEAR == WEEKSPERYEAR - 1
                         i += 1
                     end
-                    push!(
-                        sample_path,
-                        ((t + d.rundata.start_wk - 2) % WEEKSPERYEAR + 1, s_inflows),
-                    )
+                    push!(sample_paths[end], ((t - 1) % WEEKSPERYEAR + 1, s_inflows))
                 end
             end
             sequence = SDDP.simulate(
