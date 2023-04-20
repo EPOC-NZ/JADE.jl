@@ -1,7 +1,7 @@
 name: CI
 on:
   push:
-    branches: [main]
+    branches: [main, develop]
   pull_request:
     types: [opened, synchronize, reopened]
 jobs:
@@ -12,11 +12,8 @@ jobs:
       fail-fast: false
       matrix:
         # JADE doesn't have any binary dependencies, so just test on Linux, LTS
-        # and current release, 64-bit and 32-bit.
+        # and current release, 64-bit.
         include:
-          - version: '1'
-            os: ubuntu-latest
-            arch: x86
           - version: '1.6'
             os: ubuntu-latest
             arch: x64
@@ -29,7 +26,7 @@ jobs:
         with:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
-      - uses: actions/cache@v1
+      - uses: actions/cache@v3
         env:
           cache-name: cache-artifacts
         with:

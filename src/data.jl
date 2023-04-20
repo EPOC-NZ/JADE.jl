@@ -5,8 +5,6 @@
 #  If a copy of the MPL was not distributed with this file, You can obtain one at
 #  http://mozilla.org/MPL/2.0/.
 
-import Statistics: mean, max
-
 """
 	parsefile(f::Function, file::String, trim::Bool = false)
 
@@ -635,8 +633,13 @@ function backup_input_files(rundata::RunData)
         "thermal_fuel_supply.csv",
     ]
 
-    out_path =
-        joinpath(@JADE_DIR, "Output", rundata.data_dir, rundata.policy_dir, "data_files")
+    out_path = joinpath(
+        @__JADE_DIR__,
+        "Output",
+        rundata.data_dir,
+        rundata.policy_dir,
+        "data_files",
+    )
 
     if !isdir(out_path)
         mkdir(out_path)
@@ -649,4 +652,34 @@ function backup_input_files(rundata::RunData)
             cp(path_to_file, joinpath(out_path, file), force = true)
         end
     end
+end
+
+function _strip_trailing_comment(x::AbstractString)
+    index = findfirst('%', x)
+    if index === nothing
+        return x
+    end
+    field = strip(x[1:index-1])
+    if field == "na" || field == "NA" || field == "default"
+        return missing
+    end
+    return field
+end
+
+_strip_trailing_comment(::Missing) = missing
+
+function _validate_and_strip_trailing_comment(row, required, optional = Symbol[])
+    row_names = CSV.getnames(row)
+    @assert length(required) <= length(row_names) <= length(required) + length(optional)
+    for n in required
+        @assert n in row_names
+    end
+    for n in row_names
+        @assert n in required || n in optional
+    end
+    dict = Dict(
+        name => _strip_trailing_comment(getproperty(row, name)) for
+        name in CSV.getnames(row)
+    )
+    return (; dict...)
 end

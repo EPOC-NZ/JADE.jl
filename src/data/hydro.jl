@@ -5,10 +5,6 @@
 #  If a copy of the MPL was not distributed with this file, You can obtain one at
 #  http://mozilla.org/MPL/2.0/.
 
-#--------------------------------------------------
-# Prepare reservoir-related data
-#--------------------------------------------------
-# Arcs in water network
 struct NaturalArc
     minflow::Float64    # flow lower bound
     maxflow::Float64    # flow upper bound
@@ -36,147 +32,155 @@ mutable struct Reservoir
 end
 
 """
-    initialisereservoirs(file::String, limits::String)
+    initialisereservoirs(
+        reservoirs_filename::String,
+        reservoir_limits_filename::String,
+    )
 
-# Description
+## Description
 
-Read list of reservoirs from `file`.
-Capacity and initial contents in Mm³.
-The columns MUST be ordered as shown below.
+Read list of reservoirs from `reservoirs_filename`.
 
-# Example File
+Capacity and initial contents are in units of Mm^3.
 
-    RESERVOIR, INFLOW_REGION, CAPACITY, INI_STATE
-    Lake_Benmore, SI, 423451075.96799916, 322000320.233399
+## Example `reservoirs_filename`
+
+```raw
+RESERVOIR, INFLOW_REGION, CAPACITY, INI_STATE
+Lake_Benmore, SI, 423451075.96799916, 322000320.233399
+```
+
+## Example `reserovoir_limits_filename`
+
+The `MIN_(j)_LEVEL` and `MAX_(j)_PENALTY` columns are optional.
+
+```raw
+YEAR,WEEK,Lake_Hawea MAX_LEVEL,Lake_Tekapo MAX_LEVEL,Lake_Tekapo MIN_1_LEVEL,Lake_Tekapo MIN_1_PENALTY,Lake_Tekapo MIN_2_LEVEL,Lake_Tekapo MIN_2_PENALTY
+2010,1,1141.95,514.1,-100,500,-191,5000
+```
 """
-function initialisereservoirs(file::String, limits::String)
+function initialisereservoirs(
+    reservoirs_filename::String,
+    reservoir_limits_filename::String,
+)
     reservoirs = Dict{Symbol,Reservoir}()
-    parsefile(file) do items
-        @assert length(items) == 3 # must be 3 columns
-        if lowercase(items[1]) == "reservoir"
-            return
-        end
-        reservoir = str2sym(items[1])
+    for row in CSV.Rows(
+        reservoirs_filename;
+        missingstring = "NA",
+        stripwhitespace = true,
+        comment = "%",
+    )
+        # TODO(odow): is CAPACITY optional?
+        row = _validate_and_strip_trailing_comment(
+            row,
+            [:RESERVOIR, :INFLOW_REGION, :INI_STATE],
+            [:CAPACITY],
+        )
+        reservoir = str2sym(row.RESERVOIR)
         if haskey(reservoirs, reservoir)
             error("Reservoir $(reservoir) given twice.")
         end
-        return reservoirs[reservoir] = Reservoir(
-            JADE.TimeSeries{Float64}(JADE.TimePoint(0, 0), []),   # capacity placeholder
-            parse(Float64, items[3]),   # initial state
-            0.0,                         # specific power
-            JADE.TimeSeries{Vector{ContingentTranche}}(JADE.TimePoint(0, 0), []),   # contingent placeholder
+        reservoirs[reservoir] = Reservoir(
+            TimeSeries{Float64}(TimePoint(0, 0), []),  # placeholder
+            parse(Float64, row.INI_STATE),
+            0.0,  # specific power
+            TimeSeries{Vector{ContingentTranche}}(TimePoint(0, 0), []),  # contingent placeholder
             length(reservoirs) + 1, # index of reservoir, used to create compatible DOASA cut files
         )
     end
-
-    limits, sym = gettimeseries(limits)
-
+    limits, reservoir_limit_column_names = gettimeseries(reservoir_limits_filename)
     for (r, res) in reservoirs
-        temp = Float64[]
-        for i in 1:length(limits)
-            push!(temp, limits[i][Symbol(string(r) * " MAX_LEVEL")])
-        end
-        res.capacity = TimeSeries{Float64}(limits.startpoint, temp)
-
-        temp = Vector{ContingentTranche}[]
+        res.capacity = TimeSeries{Float64}(
+            limits.startpoint,
+            Float64[limits[i][Symbol("$r MAX_LEVEL")] for i in 1:length(limits)],
+        )
+        tranches = Vector{ContingentTranche}[ContingentTranche[] for i in 1:length(limits)]
         j = 1
         total = zeros(Float64, length(limits))
-        while Symbol(string(r) * " MIN_" * string(j) * "_LEVEL") ∈ sym || j == 1
-            if j > 1 && Symbol(string(r) * " MIN_" * string(j) * "_PENALTY") ∉ sym
-                error(string(r) * " contingent storage penalty missing")
+        if !(Symbol("$r MIN_$(j)_LEVEL") in reservoir_limit_column_names)
+            for i in 1:length(limits)
+                push!(tranches[i], ContingentTranche(0.0, 0.0))
+            end
+        end
+        while Symbol("$r MIN_$(j)_LEVEL") in reservoir_limit_column_names
+            if !(Symbol("$r MIN_$(j)_PENALTY") in reservoir_limit_column_names)
+                error("$r contingent storage missing MIN_$(j)_PENALTY")
             end
             for i in 1:length(limits)
-                limit = 0.0
-                if Symbol(string(r) * " MIN_" * string(j) * "_LEVEL") ∈ sym
-                    if j == 1
-                        push!(temp, ContingentTranche[])
-                        limit =
-                            -limits[i][Symbol(string(r) * " MIN_" * string(j) * "_LEVEL")]
-                    else
-                        total[i] =
-                            -limits[i][Symbol(string(r) * " MIN_" * string(j) * "_LEVEL")]
-                        limit =
-                            total[i] + limits[i][Symbol(
-                                string(r) * " MIN_" * string(j - 1) * "_LEVEL",
-                            )]
-                    end
-
-                    tranche = ContingentTranche(
-                        limit,
-                        limits[i][Symbol(string(r) * " MIN_" * string(j) * "_PENALTY")],
-                    )
-                    push!(temp[i], tranche)
-                else
-                    push!(temp, [ContingentTranche(0.0, 0.0)])
+                total[i] = -limits[i][Symbol("$r MIN_$(j)_LEVEL")]
+                if j > 1
+                    total[i] += limits[i][Symbol("$r MIN_$(j-1)_LEVEL")]
                 end
+                penalty = limits[i][Symbol("$r MIN_$(j)_PENALTY")]
+                push!(tranches[i], ContingentTranche(total[i], penalty))
             end
             j += 1
         end
-        total .-= minimum(total)
-        if maximum(total) >= 1E-8
-            error("The maximum contingent storage must be constant for each reservoir.")
+        if maximum(total) - minimum(total) >= 1e-8
+            error("The maximum contingent storage is not constant for reservoir $r.")
         end
-
-        if length(temp) != 0
-            res.contingent = TimeSeries{Vector{ContingentTranche}}(limits.startpoint, temp)
-        end
+        res.contingent = TimeSeries{Vector{ContingentTranche}}(limits.startpoint, tranches)
     end
     return reservoirs
 end
 
-#------------------------------------------------------
-# Flow arcs and hydro generator data
-#------------------------------------------------------
 """
     getnaturalarcs(file::String)
 
 # Description
 
 Read list of hydro station data from `file`.
+
 Canals, rivers, and other means of getting water from one place to another.
+
 Excludes power station turbines and spillways; those are covered in the hydro_stations file.
-Min/max flow in cumecs.
+
+`MIN_FLOW` and `MAX_FLOW` are in cumecs.
+
 NA in MIN_FLOW converted to 0.0
 NA in MAX_FLOW converted to 99999.0
-The columns MUST be ordered as shown below.
 
 # Example File
 
-    ORIG,DEST,MIN_FLOW,MAX_FLOW
-    Lake_Wanaka,Lake_Dunstan, NA, NA
-    Lake_Hawea,Lake_Dunstan, 0.00, 99999
+```raw
+ORIG,DEST,MIN_FLOW,MAX_FLOW
+Lake_Wanaka,Lake_Dunstan,NA,NA
+Lake_Hawea,Lake_Dunstan,0.00,NA
+```
+
+```raw
+ORIG,DEST,MIN_FLOW,MAX_FLOW,LB_PENALTY,UB_PENALTY
+Lake_Wanaka,Lake_Dunstan,NA,NA,100,100
+Lake_Hawea,Lake_Dunstan,0.00,NA,50,50
+```
 """
-function getnaturalarcs(file::String)
+function getnaturalarcs(filename::String)
     natural_arcs = Dict{NTuple{2,Symbol},NaturalArc}()
-    parsefile(file, true) do items
-        if length(items) ∉ [4, 6]
-            error(
-                "hydro_arcs.csv should have 4 or 6 columns, " *
-                string(length(items)) *
-                " found",
-            )
-        end
-        if lowercase(items[1]) == "orig"
-            return
-        end
-        od_pair = (str2sym(items[1]), str2sym(items[2]))
+    for row in CSV.Rows(
+        filename;
+        missingstring = ["NA", "na", "default"],
+        stripwhitespace = true,
+        comment = "%",
+    )
+        row = _validate_and_strip_trailing_comment(
+            row,
+            [:ORIG, :DEST, :MIN_FLOW, :MAX_FLOW],
+            [:LB_PENALTY, :UB_PENALTY],
+        )
+        od_pair = (str2sym(row.ORIG), str2sym(row.DEST))
         if haskey(natural_arcs, od_pair)
             error("Arc $(od_pair) given twice.")
-        else
-            natural_arcs[od_pair] = NaturalArc(
-                (lowercase(items[3]) == "na") ? 0.0 : parse(Float64, items[3]),
-                (lowercase(items[4]) == "na") ? Inf : parse(Float64, items[4]),
-                (length(items) == 4 || lowercase(items[5]) == "default") ? -1.0 :
-                parse(Float64, items[5]),
-                (length(items) == 4 || lowercase(items[6]) == "default") ? -1.0 :
-                parse(Float64, items[6]),
-            )
         end
+        natural_arcs[od_pair] = NaturalArc(
+            parse(Float64, coalesce(row.MIN_FLOW, "0")),
+            parse(Float64, coalesce(row.MAX_FLOW, "Inf")),
+            parse(Float64, coalesce(get(row, :LB_PENALTY, missing), "-1")),
+            parse(Float64, coalesce(get(row, :UB_PENALTY, missing), "-1")),
+        )
     end
     return natural_arcs
 end
 
-# Hydro generators
 struct HydroStation
     node::Symbol
     capacity::Float64
@@ -188,83 +192,72 @@ end
 """
     gethydros(file::String)
 
-# Description
+## Description
 
 Read list of hydro station data from `file`.
 Capacity in MW;
 Specific power in MW/cumec;
 Spillway max flow in cumecs (can be zero if no spillway exists, or "na" for unlimited spill).
-The columns MUST be ordered as shown below.
 
-# Example File
+## Example File
 
-    GENERATOR,HEAD_WATER_FROM,TAIL_WATER_TO,POWER_SYSTEM_NODE,CAPACITY,SPECIFIC_POWER,SPILLWAY_MAX_FLOW
-    Arapuni,Lake_Arapuni,Lake_Karapiro,NI,196.7,0.439847649,99999
+```raw
+GENERATOR,HEAD_WATER_FROM,TAIL_WATER_TO,POWER_SYSTEM_NODE,CAPACITY,SPECIFIC_POWER,SPILLWAY_MAX_FLOW
+Arapuni,Lake_Arapuni,Lake_Karapiro,NI,196.7,0.439847649,na
+```
+
+```raw
+GENERATOR,HEAD_WATER_FROM,TAIL_WATER_TO,POWER_SYSTEM_NODE,CAPACITY,SPECIFIC_POWER,SPILLWAY_MAX_FLOW,OM_COST,OVERSPILL_PENALTY
+Arapuni,Lake_Arapuni,Lake_Karapiro,NI,196.7,0.439847649,na,100,100
+```
 """
-function gethydros(file::String, nodes::Vector{Symbol})
+function gethydros(filename::String, nodes::Vector{Symbol})
     hydros = Dict{Symbol,HydroStation}()
     station_arcs = Dict{NTuple{2,Symbol},StationArc}()
-
-    mode = -1
-
-    parsefile(file, true) do items
-        if length(items) ∉ [7, 8, 9]
-            error(
-                "hydro_stations.csv should have 7, 8, 9 columns, " *
-                string(length(items)) *
-                " found",
-            )
-        end
-
-        if lowercase(items[1]) == "generator"
-            if length(items) == 7
-                mode = 0
-            elseif length(items) == 8
-                if lowercase(items[8]) == "om_cost"
-                    mode = 1
-                elseif lowercase(items[8]) == "overspill_penalty"
-                    mode = 2
-                end
-            elseif length(items) == 9 &&
-                   lowercase(items[8]) == "om_cost" &&
-                   lowercase(items[9]) == "overspill_penalty"
-                mode = 3
-            end
-            if mode == -1
-                error(
-                    "Invalid column headings, if there are 8 or 9 columns the final two must be labelled 'om_cost' and 'overspill_penalty'",
-                )
-            end
-            return
-        end
-        generator = str2sym(items[1])
+    for row in CSV.Rows(
+        filename;
+        missingstring = ["NA", "na", "default"],
+        stripwhitespace = true,
+        comment = "%",
+    )
+        row = _validate_and_strip_trailing_comment(
+            row,
+            [
+                :GENERATOR,
+                :HEAD_WATER_FROM,
+                :TAIL_WATER_TO,
+                :POWER_SYSTEM_NODE,
+                :CAPACITY,
+                :SPECIFIC_POWER,
+                :SPILLWAY_MAX_FLOW,
+            ],
+            [:OM_COST, :OVERSPILL_PENALTY],
+        )
+        generator = str2sym(row.GENERATOR)
         if haskey(hydros, generator)
             error("Generator $(generator) given twice.")
         end
-        station_arc = (str2sym(items[2]), str2sym(items[3]))
-        if str2sym(items[4]) in nodes
-            hydros[generator] = HydroStation(
-                str2sym(items[4]),
-                parse(Float64, items[5]),
-                parse(Float64, items[6]),
-                (mode == 0 || mode == 2) ? 0.0 : parse(Float64, items[8]),
-                station_arc,
-            )
-        else
-            error("Node " * items[4] * " for generator " * items[1] * " not found")
-        end
-
+        station_arc = (str2sym(row.HEAD_WATER_FROM), str2sym(row.TAIL_WATER_TO))
         if haskey(station_arcs, station_arc)
             error("Station arc $(station_arc) already given.")
-        else
-            spillwayflow =
-                station_arcs[station_arc] = StationArc(
-                    (lowercase(items[7]) == "na") ? Inf : parse(Float64, items[7]),
-                    (mode == 0 || mode == 1) ? -1.0 :
-                    ((mode == 2) ? parse(Float64, items[8]) : parse(Float64, items[9])),
-                    generator,
-                )
         end
+
+        power_system_node = str2sym(row.POWER_SYSTEM_NODE)
+        if !(power_system_node in nodes)
+            error("Node $power_system_node for generator $generator not found")
+        end
+        hydros[generator] = HydroStation(
+            power_system_node,
+            parse(Float64, row.CAPACITY),
+            parse(Float64, row.SPECIFIC_POWER),
+            parse(Float64, get(row, :OM_COST, "0.0")),
+            station_arc,
+        )
+        station_arcs[station_arc] = StationArc(
+            parse(Float64, coalesce(row.SPILLWAY_MAX_FLOW, "Inf")),
+            parse(Float64, get(row, :OVERSPILL_PENALTY, "-1")),
+            generator,
+        )
     end
     return hydros, station_arcs
 end
@@ -333,7 +326,8 @@ function adjustinflows(inflow_file::String, rundata::RunData)
         N = length(years)
         # Follow the steps in DOASA paper
         α = [  # mean historical inflow
-            mean(inflow for (tp, inflow) in zip(tps, infl) if tp.week == t) for t in weeks
+            Statistics.mean(inflow for (tp, inflow) in zip(tps, infl) if tp.week == t)
+            for t in weeks
         ]
         W = [] # rolling total inflow starting from week ty
         for ty in 1:length(infl)
@@ -345,13 +339,15 @@ function adjustinflows(inflow_file::String, rundata::RunData)
             end
         end
         m = [  # mean of the rolling inflow
-            mean(W[i] for (i, tp) in enumerate(tps) if tp.week == t) for t in weeks
+            Statistics.mean(W[i] for (i, tp) in enumerate(tps) if tp.week == t) for
+            t in weeks
         ]
         d = [  # mean + the bigger deviation
             max(0.0, α[tp.week] + (W[i] - m[tp.week]) / √ω) for (i, tp) in enumerate(tps)
         ]
         d_mean = [  # mean of adjusted values
-            mean(d[i] for (i, tp) in enumerate(tps) if tp.week == t) for t in weeks
+            Statistics.mean(d[i] for (i, tp) in enumerate(tps) if tp.week == t) for
+            t in weeks
         ]
         k = [  # adjusted inflows
             isnan(d[i] * α[tp.week] / d_mean[tp.week]) ? α[tp.week] :
@@ -383,7 +379,7 @@ function diatofile(
     outpath::String,
     policy_dir::String,
 )
-    outpath = joinpath(@JADE_DIR, "Output", outpath)
+    outpath = joinpath(@__JADE_DIR__, "Output", outpath)
     if !ispath(joinpath(outpath, policy_dir))
         mkpath(joinpath(outpath, policy_dir))
     end

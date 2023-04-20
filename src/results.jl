@@ -35,7 +35,7 @@ function write_sim_results(
     s = d.sets
 
     data_dir = joinpath(
-        @JADE_DIR,
+        @__JADE_DIR__,
         "Output",
         d.rundata.data_dir,
         d.rundata.policy_dir,
@@ -92,11 +92,12 @@ function write_sim_results(
     #------------------------------------
     # Final objective
     #------------------------------------
-    writedlm(
-        outdir("TotalCost.csv"),
-        [results[i][end][:running_cost] for i in 1:nsims],
-        ',',
-    )
+    open(outdir("TotalCost.csv"), "w") do io
+        for i in 1:nsims
+            println(io, results[i][end][:running_cost])
+        end
+        return
+    end
 
     #------------------------------------
     # Stored energy
@@ -287,7 +288,7 @@ function write_training_results(
     d::JADEData,
     solveoptions::JADESolveOptions,
 )
-    data_dir = joinpath(@JADE_DIR, "Output", d.rundata.data_dir)
+    data_dir = joinpath(@__JADE_DIR__, "Output", d.rundata.data_dir)
 
     !ispath(data_dir) && mkpath(data_dir)
 
@@ -316,27 +317,25 @@ function write_training_results(
 
     if solveoptions.write_eohcuts
         if d.rundata.number_of_wks == 52 && d.rundata.steady_state == true
-            @info("Creating EOH cuts in " * joinpath("Input", "d.rundata.data_dir", "EOH"))
+            @info("Creating EOH cuts in " * joinpath("Input", d.rundata.data_dir, "EOH"))
 
-            if !ispath(joinpath(@JADE_DIR, "Input", d.rundata.data_dir, "EOH"))
-                mkpath(joinpath(@JADE_DIR, "Input", d.rundata.data_dir, "EOH"))
+            if !ispath(joinpath(@__JADE_DIR__, "Input", d.rundata.data_dir, "EOH"))
+                mkpath(joinpath(@__JADE_DIR__, "Input", d.rundata.data_dir, "EOH"))
             end
-
-            JADE.write_cuts_to_file(
+            SDDP.write_cuts_to_file(
                 sddpm,
                 joinpath(
-                    @JADE_DIR,
+                    @__JADE_DIR__,
                     "Input",
                     d.rundata.data_dir,
                     "EOH",
                     "$(d.rundata.policy_dir).eoh",
-                ),
-                d.rundata.start_wk,
+                );
+                node_name_parser = t -> "$(mod(t + d.rundata.start_wk - 2, 52) + 1)",
             )
-
             open(
                 joinpath(
-                    @JADE_DIR,
+                    @__JADE_DIR__,
                     "Input",
                     d.rundata.data_dir,
                     "EOH",
@@ -348,7 +347,7 @@ function write_training_results(
             end
             open(
                 joinpath(
-                    @JADE_DIR,
+                    @__JADE_DIR__,
                     "Input",
                     d.rundata.data_dir,
                     "EOH",
@@ -378,7 +377,7 @@ function output_tidy_results(
     variables::Array{Symbol,1},
 )
     data_dir = joinpath(
-        @JADE_DIR,
+        @__JADE_DIR__,
         "Output",
         d.rundata.data_dir,
         d.rundata.policy_dir,
