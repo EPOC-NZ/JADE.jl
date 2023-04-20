@@ -292,7 +292,7 @@ function simulate(JADEmodel::JADEModel, parameters::JADESimulation)
             end
             sequence = [seq]
         else
-            sample_path = Tuple{Int,Dict{Symbol,Float64}}[]
+            sample_paths = Tuple{Int,Dict{Symbol,Float64}}[]
             for year in parameters.sim_years
                 years = collect(
                     year:(year-1+ceil(
@@ -329,7 +329,7 @@ function simulate(JADEmodel::JADEModel, parameters::JADESimulation)
                 sddpm,
                 1,
                 get_primal,
-                sampling_scheme = SDDP.Historical(sample_path),
+                sampling_scheme = SDDP.Historical(sample_paths),
                 custom_recorders = get_dual,
                 incoming_state = initial_state,
             )
