@@ -298,6 +298,108 @@ function test_case_1_infinite_horizon_then_finite_horizon()
     return
 end
 
+function test_case_1_simulate_historical()
+    optimizer = MOI.OptimizerWithAttributes(HiGHS.Optimizer, MOI.Silent() => true)
+    data = define_JADE_model("test1")
+    data.use_terminal_mwvs = true
+    solve_options = define_JADE_solve_options("test1")
+    model = create_JADE_model(data, optimizer)
+    optimize_policy!(model, solve_options; print_level = 0)
+    simulation = define_JADE_simulation("test1")
+    simulation.sim_type = :historical
+    @test_throws(
+        ErrorException("Invalid settings found. See REPL for details."),
+        JADE.simulate(model, simulation),
+    )
+    simulation.sim_years = [2008]
+    @test_throws(
+        ErrorException("Invalid settings found. See REPL for details."),
+        JADE.simulate(model, simulation),
+    )
+    simulation.replications = 1
+    results = JADE.simulate(model, simulation)
+    @test length(results) == 1
+    @test length(results[1]) == 20
+    @test sum(results[1][1][:lostload]) ≈ 0.0
+    @test results[1][1][:inflow][:LAKE_AVIEMORE] == 16.2042285714286
+    @test results[1][20][:inflow][:LAKE_AVIEMORE] == 8.64508571428571
+    return
+end
+
+function test_case_1_simulate_historical_cyclic()
+    optimizer = MOI.OptimizerWithAttributes(HiGHS.Optimizer, MOI.Silent() => true)
+    data = define_JADE_model("test1"; run_file = "run4")
+    data.scale_objective = 1e6
+    data.weekly_discounting = false
+    options = define_JADE_solve_options("test1"; run_file = "run4")
+    model = create_JADE_model(data, HiGHS.Optimizer)
+    optimize_policy!(model, options; print_level = 0)
+    simulation = define_JADE_simulation("test1")
+    simulation.sim_type = :historical
+    simulation.replications = 2
+    simulation.sim_years = [2008, 2009]
+    results = JADE.simulate(model, simulation)
+    @test length(results) == 2
+    @test length(results[1]) == 52
+    @test sum(results[1][1][:lostload]) ≈ 0.0
+    @test results[1][1][:inflow][:LAKE_AVIEMORE] ≈ 11.9486285714286
+    @test results[1][20][:inflow][:LAKE_AVIEMORE] ≈ 8.0728
+    @test results[2][1][:inflow][:LAKE_AVIEMORE] ≈ 46.7389142857143
+    @test results[2][20][:inflow][:LAKE_AVIEMORE] ≈ 86.2477714285714
+    return
+end
+
+function test_case_1_simulate_monte_carlo_cyclic()
+    optimizer = MOI.OptimizerWithAttributes(HiGHS.Optimizer, MOI.Silent() => true)
+    data = define_JADE_model("test1"; run_file = "run4")
+    data.scale_objective = 1e6
+    data.weekly_discounting = false
+    options = define_JADE_solve_options("test1"; run_file = "run4")
+    model = create_JADE_model(data, HiGHS.Optimizer)
+    optimize_policy!(model, options; print_level = 0)
+    simulation = define_JADE_simulation("test1")
+    simulation.sim_type = :monte_carlo
+    simulation.replications = 5
+    results = JADE.simulate(model, simulation)
+    @test length(results) == 5
+    @test length(results[1]) == 52
+    @test sum(results[1][1][:lostload]) ≈ 0.0
+    # Test that the simulation was cyclic
+    res_level = results[1][52][:reslevel][:LAKE_PUKAKI].out
+    @test res_level == results[2][1][:reslevel][:LAKE_PUKAKI].in
+    return
+end
+
+function test_case_1_simulate_historical_initial_state()
+    optimizer = MOI.OptimizerWithAttributes(HiGHS.Optimizer, MOI.Silent() => true)
+    data = define_JADE_model("test1")
+    data.use_terminal_mwvs = true
+    solve_options = define_JADE_solve_options("test1")
+    model = create_JADE_model(data, optimizer)
+    optimize_policy!(model, solve_options; print_level = 0)
+    simulation = define_JADE_simulation("test1")
+    simulation.sim_type = :historical
+    simulation.replications = 1
+    simulation.sim_years = [2008]
+    results = JADE.simulate(model, simulation)
+    # Test that setting the initial state as the default gives the same answer
+    simulation.initial_state =
+        Dict(String(k) => v for (k, v) in model.sddpm.initial_root_state)
+    results2 = JADE.simulate(model, simulation)
+    @test results[1][1][:total_storage] == results2[1][1][:total_storage]
+    delete!(simulation.initial_state, "reslevel[LAKE_OHAU]")
+    @test_throws(
+        ErrorException("initial_state dictionary has incorrect number of states"),
+        JADE.simulate(model, simulation),
+    )
+    simulation.initial_state["reslevel[LAKE_FAKE]"] = 0.0
+    @test_throws(
+        ErrorException("Invalid state: reslevel[LAKE_FAKE]"),
+        JADE.simulate(model, simulation),
+    )
+    return
+end
+
 end  # module
 
 TestCases.runtests()
