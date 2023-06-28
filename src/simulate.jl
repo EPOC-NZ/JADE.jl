@@ -292,7 +292,8 @@ function simulate(JADEmodel::JADEModel, parameters::JADESimulation)
             end
             sequence = [seq]
         else
-            sample_path = Tuple{Int,Dict{Symbol,Float64}}[]
+            sample_path = Tuple{Int,Any}[]
+	    push!(sample_path, (1, nothing))  # The investment node
             for year in parameters.sim_years
                 years = collect(
                     year:(year-1+ceil(
@@ -322,7 +323,7 @@ function simulate(JADEmodel::JADEModel, parameters::JADESimulation)
                     if (t + d.rundata.start_wk - 2) % WEEKSPERYEAR == WEEKSPERYEAR - 1
                         i += 1
                     end
-                    push!(sample_path, ((t - 1) % WEEKSPERYEAR + 1, s_inflows))
+                    push!(sample_path, ((t - 1) % WEEKSPERYEAR + 2, s_inflows))
                 end
             end
             sequence = SDDP.simulate(
