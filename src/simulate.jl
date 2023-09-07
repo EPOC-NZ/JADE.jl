@@ -88,10 +88,7 @@ function simulate(JADEmodel::JADEModel, parameters::JADESimulation)
 
     get_dual = Dict{Symbol,Function}(
         :prices => (sp) -> d.rundata.scale_objective * JuMP.dual.(sp[:defineShedding]),
-        :mwv =>
-            (sp) ->
-                -d.rundata.scale_objective * JuMP.dual.(sp[:rbalance]) / 1E3 /
-                d.rundata.scale_reservoirs,
+        :mwv => (sp) -> -d.rundata.scale_objective * JuMP.dual.(sp[:rbalance]) / 1E3,
     )
 
     initial_state = Dict(String(k) => v for (k, v) in JADEmodel.sddpm.initial_root_state)
