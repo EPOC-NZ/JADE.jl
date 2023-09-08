@@ -557,9 +557,8 @@ function JADEsddp(d::JADEData, optimizer = nothing)
             md,
             contingent_storage_cost,
             sum(
-                contingent[r, j] *
-                d.reservoirs[r].contingent[timenow][j].penalty for r in CONTINGENT,
-                j in 1:length(d.reservoirs[r].contingent[timenow])
+                contingent[r, j] * d.reservoirs[r].contingent[timenow][j].penalty for
+                r in CONTINGENT, j in 1:length(d.reservoirs[r].contingent[timenow])
             )
         )
 
