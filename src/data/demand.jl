@@ -90,7 +90,7 @@ function getdemandresponse(file::String, demand, durations, nodes, years, weeks,
     sectors = Symbol[]
     parsefile(file, true) do items
         if length(items) == 10
-            if lowercase(items[1]) == "sector"
+            if lowercase(items[1]) == "demand"
                 return
             end
 

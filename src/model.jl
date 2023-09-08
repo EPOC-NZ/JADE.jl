@@ -87,7 +87,7 @@ function JADEsddp(d::JADEData, optimizer = nothing)
         JuMP.@variable(
             md,
             -sum(
-                d.reservoirs[r].contingent[timenow][j].level / scale_factor for
+                d.reservoirs[r].contingent[timenow][j].level for
                 j in 1:length(d.reservoirs[r].contingent[timenow])
             ) / scale_factor <=
             reslevel[r in s.RESERVOIRS] <=
@@ -557,9 +557,8 @@ function JADEsddp(d::JADEData, optimizer = nothing)
             md,
             contingent_storage_cost,
             sum(
-                contingent[r, j] / scale_factor *
-                d.reservoirs[r].contingent[timenow][j].penalty for r in CONTINGENT,
-                j in 1:length(d.reservoirs[r].contingent[timenow])
+                contingent[r, j] * d.reservoirs[r].contingent[timenow][j].penalty for
+                r in CONTINGENT, j in 1:length(d.reservoirs[r].contingent[timenow])
             )
         )
 
